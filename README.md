@@ -9,6 +9,7 @@ If you want a Bilibili recorder featured with:
 - Save raw video streams directly, without intentional clipping
 - Efficient execution
 - Friendly logging to `stdout` or files
+- **Just works**
 
 Then you should give SLBR *(suck-less bilibili live recorder)* a try.
 
