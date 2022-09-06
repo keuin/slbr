@@ -1,4 +1,4 @@
-# YABR: Yet another Bilibili livestream recorder
+# SLBR: A Bilibili livestream recorder that sucks less
 
 ## 1. Features
 
@@ -10,7 +10,7 @@ If you want a Bilibili recorder featured with:
 - Efficient execution
 - Friendly logging to `stdout` or files
 
-Then you should give YABR a try.
+Then you should give SLBR *(suck-less bilibili live recorder)* a try.
 
 ## 2. Why another Bilibili livestream recorder
 
