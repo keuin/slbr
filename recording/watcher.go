@@ -188,7 +188,7 @@ func watch(
 							logger.Printf("Cannot parse Dan Mu message JSON: %v\n", err)
 							continue
 						}
-						logger.Printf("Dan mu: %v\n", dmm.String())
+						logger.Printf("Dan Mu: %v\n", dmm.String())
 					default:
 						logger.Printf("Ignoring server message %v %v %v\n",
 							info.Command, msg.Operation, string(msg.Body))
