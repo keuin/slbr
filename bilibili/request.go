@@ -38,11 +38,11 @@ func callGet[T BaseResponse[V], V any](b Bilibili, url string) (resp T, err erro
 	}
 
 	r, err := b.http.Do(req)
-	defer func() { _ = r.Body.Close() }()
 	if err != nil {
 		logger.Printf("ERROR: HTTP Request failed on API %v: %v", url, err)
 		return
 	}
+	defer func() { _ = r.Body.Close() }()
 
 	err = validateHttpStatus(r)
 	if err != nil {
