@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/signal"
 	"sync"
+	"syscall"
 )
 
 var globalConfig *GlobalConfig
@@ -131,12 +132,22 @@ func main() {
 		go recording.RunTask(ctx, &wg, &task)
 	}
 
-	// listen Ctrl-C
-	chSigInt := make(chan os.Signal)
-	signal.Notify(chSigInt, os.Interrupt)
+	// listen on stop signals
+	chSigStop := make(chan os.Signal)
+	signal.Notify(chSigStop,
+		syscall.SIGHUP,
+		syscall.SIGINT,
+		syscall.SIGTERM)
 	go func() {
-		<-chSigInt
+		<-chSigStop
 		cancelTasks()
+	}()
+
+	chSigQuit := make(chan os.Signal)
+	signal.Notify(chSigQuit, syscall.SIGQUIT)
+	go func() {
+		<-chSigQuit
+		os.Exit(0)
 	}()
 
 	// block main goroutine on task goroutines
