@@ -3,6 +3,7 @@ package recording
 import (
 	"bilibili-livestream-archiver/common"
 	"bilibili-livestream-archiver/danmaku"
+	"bilibili-livestream-archiver/danmaku/dmmsg"
 	"bilibili-livestream-archiver/danmaku/dmpkg"
 	"context"
 	"encoding/json"
@@ -26,7 +27,8 @@ const (
 )
 
 type liveInfo struct {
-	Command liveCommand `json:"cmd"`
+	Command liveCommand            `json:"cmd"`
+	Data    map[string]interface{} `json:"data"`
 }
 
 type ErrorReason int
@@ -126,7 +128,7 @@ func watch(
 
 			switch msg.Operation {
 			case dmpkg.OpLayer7Data:
-				logger.Printf("server message: op %v, body %v\n", msg.Operation, string(msg.Body))
+				//logger.Printf("server message: op %v, body %v\n", msg.Operation, string(msg.Body))
 				var info liveInfo
 				err := json.Unmarshal(msg.Body, &info)
 				if err != nil {
@@ -144,8 +146,53 @@ func watch(
 						chEvent <- WatcherLiveStop
 					}
 				default:
-					logger.Printf("Ignoring server message %v %v %v\n",
-						info.Command, msg.Operation, string(msg.Body))
+					switch info.Command {
+					case "ONLINE_RANK_COUNT":
+						fallthrough
+					case "STOP_LIVE_ROOM_LIST":
+						// useless message
+						fallthrough
+					case "HOT_RANK_CHANGED_V2":
+						// useless message
+						logger.Printf("Ignore message: %v\n", info.Command)
+					case "WATCHED_CHANGE":
+						// number of watched people changed
+						obj, exists := info.Data["num"]
+						if !exists {
+							continue
+						}
+						watchedPeopleNumber, ok := obj.(float64)
+						if !ok {
+							logger.Printf("Cannot parse watched people number: %v\n", obj)
+							continue
+						}
+						logger.Printf("Watched people (room: %v): %v", roomId, watchedPeopleNumber)
+					case "INTERACT_WORD":
+						var raw dmmsg.RawInteractWordMessage
+						err = json.Unmarshal(msg.Body, &raw)
+						if err != nil {
+							logger.Printf("Cannot parse RawInteractWordMessage JSON: %v\n", err)
+							continue
+						}
+						logger.Printf("Interact word message: user: %v medal: %v",
+							raw.Data.UserName, raw.Data.FansMedal.Name)
+					case "DANMU_MSG":
+						var raw dmmsg.RawDanMuMessage
+						err = json.Unmarshal(msg.Body, &raw)
+						if err != nil {
+							logger.Printf("Cannot parse Dan Mu message as JSON: %v\n", err)
+							continue
+						}
+						dmm, err := dmmsg.ParseDanmakuMessage(raw)
+						if err != nil {
+							logger.Printf("Cannot parse Dan Mu message JSON: %v\n", err)
+							continue
+						}
+						logger.Printf("Dan mu: %v\n", dmm.String())
+					default:
+						logger.Printf("Ignoring server message %v %v %v\n",
+							info.Command, msg.Operation, string(msg.Body))
+					}
 				}
 			default:
 				logger.Printf("Server message: %v\n", msg.String())
