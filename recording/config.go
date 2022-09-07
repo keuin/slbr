@@ -9,6 +9,7 @@ type TaskConfig struct {
 	RoomId    common.RoomId   `mapstructure:"room_id"`
 	Transport TransportConfig `mapstructure:"transport"`
 	Download  DownloadConfig  `mapstructure:"download"`
+	Watch     WatchConfig     `mapstructure:"watch"`
 }
 
 type TransportConfig struct {
@@ -20,6 +21,10 @@ type TransportConfig struct {
 type DownloadConfig struct {
 	SaveDirectory        string `mapstructure:"save_directory"`
 	DiskWriteBufferBytes int    `mapstructure:"disk_write_buffer_bytes"`
+}
+
+type WatchConfig struct {
+	LiveInterruptedRestartSleepSeconds int `mapstructure:"live_interrupted_restart_sleep_seconds"`
 }
 
 func DefaultTransportConfig() TransportConfig {

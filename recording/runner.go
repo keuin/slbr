@@ -87,9 +87,22 @@ func doTask(ctx context.Context, task *TaskConfig) error {
 				}
 				go func() {
 					cancelled := false
+					var err2 error
 					// restart recorder if interrupted by I/O errors
 					for !cancelled {
-						cancelled = record(recorderCtx, bi, task)
+						cancelled, err2 = record(recorderCtx, bi, task)
+						if err2 == bilibili.ErrRoomIsClosed {
+							sec := task.Watch.LiveInterruptedRestartSleepSeconds
+							if sec == 0 {
+								// default: 3s
+								// TODO move this to default config value (not easily supported by viper)
+								time.Sleep(3 * time.Second)
+							}
+							if sec > 0 {
+								logger.Printf("Sleep for %vs before restart recording.\n", sec)
+								time.Sleep(time.Duration(sec) * time.Second)
+							}
+						}
 					}
 					logger.Printf("Task is cancelled. Stop recording. (room %v)\n", task.RoomId)
 				}()
@@ -106,7 +119,7 @@ func record(
 	ctx context.Context,
 	bi bilibili.Bilibili,
 	task *TaskConfig,
-) (cancelled bool) {
+) (cancelled bool, err error) {
 	logger := log.Default()
 	logger.Printf("INFO: Getting room profile...\n")
 
@@ -149,8 +162,8 @@ func record(
 		return
 	}
 	if len(urlInfo.Data.URLs) == 0 {
-		j, err := json.Marshal(urlInfo)
-		if err != nil {
+		j, err2 := json.Marshal(urlInfo)
+		if err2 != nil {
 			j = []byte("(not available)")
 		}
 		logger.Printf("ERROR: No stream returned from API. Response: %v", string(j))
@@ -182,6 +195,7 @@ func record(
 			logger.Printf("Failed to flush buffered file write data: %v\n", err)
 		}
 	}()
+	logger.Printf("Write buffer size: %v byte\n", fWriter.Size())
 
 	logger.Printf("Recording live stream to file \"%v\"...", filePath)
 	err = bi.CopyLiveStream(ctx, task.RoomId, streamSource, fWriter)

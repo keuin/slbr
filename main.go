@@ -48,8 +48,18 @@ func getTasks() (tasks []recording.TaskConfig) {
 		&argparse.Options{
 			Required: false,
 			Help:     "Specify which configuration file to use",
+			Default:  ".",
 		},
 	)
+	diskBufSizePtr := parser.Int(
+		"b", "disk-write-buffer",
+		&argparse.Options{
+			Required: false,
+			Help:     "Specify disk write buffer size (bytes). The real minimum buffer size is determined by OS.",
+			Default:  -1,
+		},
+	)
+
 	err = parser.Parse(os.Args)
 	if err != nil {
 		return
@@ -71,13 +81,15 @@ func getTasks() (tasks []recording.TaskConfig) {
 	if fromFile {
 		configFile := *configFilePtr
 		fmt.Printf("Config file: %v\n", configFile)
-		var file *os.File
-		file, err = os.Open(configFile)
+
+		viper.SetConfigFile(configFile)
+
+		err = viper.ReadInConfig()
 		if err != nil {
 			err = fmt.Errorf("cannot open config file \"%v\": %w", configFile, err)
 			return
 		}
-		err = viper.ReadConfig(file)
+
 		if err != nil {
 			err = fmt.Errorf("cannot read config file \"%v\": %w", configFile, err)
 			return
@@ -95,13 +107,15 @@ func getTasks() (tasks []recording.TaskConfig) {
 	// generate task list from cli
 	taskCount := len(*rooms)
 	tasks = make([]recording.TaskConfig, taskCount)
-	saveTo := common.Zeroable[string](*saveToPtr).OrElse(".")
+	saveTo := *saveToPtr
+	diskBufSize := *diskBufSizePtr
 	for i := 0; i < taskCount; i++ {
 		tasks[i] = recording.TaskConfig{
 			RoomId:    common.RoomId((*rooms)[i]),
 			Transport: recording.DefaultTransportConfig(),
 			Download: recording.DownloadConfig{
-				SaveDirectory: saveTo,
+				DiskWriteBufferBytes: diskBufSize,
+				SaveDirectory:        saveTo,
 			},
 		}
 	}
