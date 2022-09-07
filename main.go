@@ -112,8 +112,8 @@ func main() {
 	tasks := getTasks()
 
 	fmt.Println("Record tasks:")
-	for _, task := range tasks {
-		fmt.Println(task.String())
+	for i, task := range tasks {
+		fmt.Printf("[%2d] %s\n", i+1, task)
 	}
 	fmt.Println("")
 

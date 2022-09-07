@@ -30,14 +30,14 @@ func DefaultTransportConfig() TransportConfig {
 }
 
 func (t TaskConfig) String() string {
-	return fmt.Sprintf("room: %v, %v, %v", t.RoomId, t.Transport.String(), t.Download.String())
+	return fmt.Sprintf("Room ID: %v, %v, %v", t.RoomId, t.Transport.String(), t.Download.String())
 }
 
 func (t TransportConfig) String() string {
-	return fmt.Sprintf("socket timeout: %vs, retry interval: %vs, max retry times: %v",
+	return fmt.Sprintf("Socket timeout: %vs, Retry interval: %vs, Max retry times: %v",
 		t.SocketTimeoutSeconds, t.RetryIntervalSeconds, t.MaxRetryTimes)
 }
 
 func (d DownloadConfig) String() string {
-	return fmt.Sprintf("save directory: %v", d.SaveDirectory)
+	return fmt.Sprintf("Save directory: \"%v\"", d.SaveDirectory)
 }
