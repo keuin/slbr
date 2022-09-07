@@ -85,7 +85,7 @@ func doTask(ctx context.Context, task *TaskConfig) error {
 					for !cancelled {
 						cancelled = record(recorderCtx, bi, task)
 					}
-					logger.Printf("Task is cancelled. (room %v)\n", task.RoomId)
+					logger.Printf("Task is cancelled. Stop recording. (room %v)\n", task.RoomId)
 				}()
 				lastStatusIsLiving = true
 			case WatcherLiveStop:
@@ -159,7 +159,11 @@ func record(
 
 	logger.Printf("Recording live stream to file \"%v\"...", filePath)
 	err = bi.CopyLiveStream(ctx, task.RoomId, streamSource, file)
-	cancelled = false
+	cancelled = err == nil
+	if !cancelled {
+		// real error happens
+		logger.Printf("Error when copying live stream: %v\n", err)
+	}
 	return
 }
 

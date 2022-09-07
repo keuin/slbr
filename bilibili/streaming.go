@@ -59,8 +59,17 @@ func (b Bilibili) CopyLiveStream(
 	defer cancelGuardian()
 
 	// blocking copy
-	n, err := io.Copy(out, resp.Body)
+	n, err, isCancelled := common.Copy(ctx, out, resp.Body)
 
+	if isCancelled {
+		// cancelled by context
+		// this error is useless
+		err = nil
+	}
+	if !isCancelled && err != nil {
+		// real error happens
+		b.error.Printf("Stream copying was interrupted unexpectedly: %v", err)
+	}
 	b.info.Printf("Bytes copied: %v", n)
-	return
+	return err
 }
