@@ -15,7 +15,7 @@ Then you should give SLBR *(suck-less bilibili live recorder)* a try.
 
 ## 2. Why another Bilibili livestream recorder
 
-The other recorder sucks. So I write my own recorder, which, I hope, sucks less.
+All the other recorders suck. So I write my own recorder, which, I hope, sucks less.
 
 ## Reference
 
