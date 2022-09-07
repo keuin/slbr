@@ -8,6 +8,7 @@ package recording
 import (
 	"bilibili-livestream-archiver/bilibili"
 	"bilibili-livestream-archiver/common"
+	"bufio"
 	"context"
 	"encoding/json"
 	"errors"
@@ -165,15 +166,25 @@ func record(
 	)
 	filePath := path.Join(task.Download.SaveDirectory, fileName)
 	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
-	defer func() { _ = file.Close() }()
 	if err != nil {
 		logger.Printf("ERROR: Cannot open file for writing: %v", err)
 		cancelled = true
 		return
 	}
+	defer func() { _ = file.Close() }()
+
+	// buffered writer
+	fWriter := bufio.NewWriterSize(file, task.Download.DiskWriteBufferBytes)
+	defer func() {
+		err := fWriter.Flush()
+		if err != nil {
+			logger := log.Default()
+			logger.Printf("Failed to flush buffered file write data: %v\n", err)
+		}
+	}()
 
 	logger.Printf("Recording live stream to file \"%v\"...", filePath)
-	err = bi.CopyLiveStream(ctx, task.RoomId, streamSource, file)
+	err = bi.CopyLiveStream(ctx, task.RoomId, streamSource, fWriter)
 	cancelled = err == nil || errors.Is(err, context.Canceled)
 	if !cancelled {
 		// real error happens
