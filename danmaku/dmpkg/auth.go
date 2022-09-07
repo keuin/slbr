@@ -35,7 +35,7 @@ func NewAuth(protocol ProtocolVer, roomId common.RoomId, authKey string) (exc Da
 
 func IsAuthOk(serverResponse DanmakuExchange) (bool, error) {
 	if op := serverResponse.Operation; op != OpConnectOk {
-		return false, fmt.Errorf("server operation is not OpConnectOk: %w", op)
+		return false, fmt.Errorf("server operation is not OpConnectOk: %v", op)
 	}
 	var body struct {
 		Code int `json:"code"`
@@ -46,7 +46,7 @@ func IsAuthOk(serverResponse DanmakuExchange) (bool, error) {
 		return false, fmt.Errorf("JSON decode error: %w", err)
 	}
 	if c := body.Code; c != 0 {
-		return false, fmt.Errorf("server response code is non-zero: %w", c)
+		return false, fmt.Errorf("server response code is non-zero: %v", c)
 	}
 	return true, nil
 }
