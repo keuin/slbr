@@ -27,12 +27,14 @@ type TaskResult struct {
 
 // RunTask start a monitor&download task and
 // put its execution result into a channel.
-func RunTask(ctx context.Context, wg *sync.WaitGroup, task *TaskConfig, chTaskResult chan<- TaskResult) {
+func RunTask(ctx context.Context, wg *sync.WaitGroup, task *TaskConfig) {
 	defer wg.Done()
 	err := doTask(ctx, task)
-	chTaskResult <- TaskResult{
-		Task:  task,
-		Error: err,
+	logger := log.Default()
+	if err != nil && !errors.Is(err, context.Canceled) {
+		logger.Printf("A task stopped with an error (room %v): %v\n", task.RoomId, err)
+	} else {
+		logger.Printf("Task stopped (room %v): %v\n", task.RoomId, task.String())
 	}
 }
 
@@ -108,6 +110,7 @@ func record(
 	logger.Printf("INFO: Getting room profile...\n")
 
 	profile, err := common.AutoRetry(
+		ctx,
 		func() (bilibili.RoomProfileResponse, error) {
 			return bi.GetRoomProfile(task.RoomId)
 		},
@@ -115,6 +118,10 @@ func record(
 		time.Duration(task.Transport.RetryIntervalSeconds)*time.Second,
 		logger,
 	)
+	if errors.Is(err, context.Canceled) {
+		cancelled = true
+		return
+	}
 	if err != nil {
 		// still error, abort
 		logger.Printf("ERROR: Cannot get room information: %v. Stopping current task.\n", err)
@@ -123,6 +130,7 @@ func record(
 	}
 
 	urlInfo, err := common.AutoRetry(
+		ctx,
 		func() (bilibili.RoomUrlInfoResponse, error) {
 			return bi.GetStreamingInfo(task.RoomId)
 		},
@@ -130,6 +138,10 @@ func record(
 		time.Duration(task.Transport.RetryIntervalSeconds)*time.Second,
 		logger,
 	)
+	if errors.Is(err, context.Canceled) {
+		cancelled = true
+		return
+	}
 	if err != nil {
 		logger.Printf("ERROR: Cannot get streaming info: %v", err)
 		cancelled = true
@@ -162,7 +174,7 @@ func record(
 
 	logger.Printf("Recording live stream to file \"%v\"...", filePath)
 	err = bi.CopyLiveStream(ctx, task.RoomId, streamSource, file)
-	cancelled = err == nil
+	cancelled = err == nil || errors.Is(err, context.Canceled)
 	if !cancelled {
 		// real error happens
 		logger.Printf("Error when copying live stream: %v\n", err)

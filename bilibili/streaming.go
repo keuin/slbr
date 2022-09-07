@@ -62,11 +62,7 @@ func (b Bilibili) CopyLiveStream(
 	// blocking copy
 	n, err := common.Copy(ctx, out, resp.Body)
 
-	if errors.Is(err, context.Canceled) {
-		// cancelled by context
-		// this error is useless
-		err = nil
-	} else {
+	if !errors.Is(err, context.Canceled) {
 		// real error happens
 		b.error.Printf("Stream copying was interrupted unexpectedly: %v", err)
 	}

@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"log"
 	"time"
 )
@@ -10,6 +11,7 @@ import (
 // the last error will be returned.
 // If logger is not nil, retry information will be printed to it.
 func AutoRetry[T any](
+	ctx context.Context,
 	supplier func() (T, error),
 	maxRetryTimes int,
 	retryInterval time.Duration,
@@ -22,8 +24,16 @@ func AutoRetry[T any](
 				logger.Printf("Try %v/%v (sleep %vs): %v\n",
 					i, maxRetryTimes, retryInterval, err)
 			}
-			time.Sleep(retryInterval)
-			continue
+			timer := time.NewTimer(retryInterval)
+			select {
+			case <-timer.C:
+				// time to have the next try
+				continue
+			case <-ctx.Done():
+				// context is cancelled
+				var zero T
+				return zero, ctx.Err()
+			}
 		}
 		// success
 		return ret, nil
@@ -31,5 +41,6 @@ func AutoRetry[T any](
 	if logger != nil {
 		logger.Printf("Max retry times reached, but it still fails. Last error: %v", err)
 	}
-	return *new(T), err
+	var zero T
+	return zero, err
 }

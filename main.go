@@ -120,37 +120,25 @@ func main() {
 	logger := log.Default()
 
 	logger.Printf("Starting tasks...")
-	chResult := make(chan recording.TaskResult)
 	wg := sync.WaitGroup{}
+	defer func() {
+		wg.Wait()
+		logger.Println("Stopping YABR...")
+	}()
 	ctx, cancelTasks := context.WithCancel(context.Background())
 	for _, task := range tasks {
 		wg.Add(1)
-		go recording.RunTask(
-			ctx,
-			&wg,
-			&task,
-			chResult,
-		)
+		go recording.RunTask(ctx, &wg, &task)
 	}
 
+	// listen Ctrl-C
 	chSigInt := make(chan os.Signal)
 	signal.Notify(chSigInt, os.Interrupt)
-loop:
-	for {
-		select {
-		case <-chSigInt:
-			logger.Println("YABR is stopped.")
-			cancelTasks()
-			break loop
-		case result := <-chResult:
-			err := result.Error
-			if err != nil {
-				logger.Printf("A task stopped with an error (room %v): %v\n",
-					result.Task.RoomId, result.Error)
-			} else {
-				logger.Printf("Task stopped (room %v): %v\n",
-					result.Task.RoomId, result.Task.String())
-			}
-		}
-	}
+	go func() {
+		<-chSigInt
+		cancelTasks()
+	}()
+
+	// block main goroutine on task goroutines
+	wg.Wait()
 }
