@@ -10,10 +10,12 @@ import (
 	"bilibili-livestream-archiver/common"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
 	"path"
+	"sync"
 	"time"
 )
 
@@ -25,7 +27,8 @@ type TaskResult struct {
 
 // RunTask start a monitor&download task and
 // put its execution result into a channel.
-func RunTask(ctx context.Context, task *TaskConfig, chTaskResult chan<- TaskResult) {
+func RunTask(ctx context.Context, wg *sync.WaitGroup, task *TaskConfig, chTaskResult chan<- TaskResult) {
+	defer wg.Done()
 	err := doTask(ctx, task)
 	chTaskResult <- TaskResult{
 		Task:  task,
@@ -146,7 +149,7 @@ func record(
 	fileName := fmt.Sprintf(
 		"%s.%s",
 		GenerateFileName(profile.Data.Title, time.Now()),
-		common.Optional[string](common.GetFileExtensionFromUrl(streamSource.URL)).OrElse("flv"),
+		common.Errorable[string](common.GetFileExtensionFromUrl(streamSource.URL)).OrElse("flv"),
 	)
 	filePath := path.Join(task.Download.SaveDirectory, fileName)
 	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
