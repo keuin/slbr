@@ -201,6 +201,11 @@ func watcherRecoverableLoop(
 			chWatcherEvent,
 		)
 
+		// the context is cancelled, stop watching
+		if errors.Is(err, context.Canceled) {
+			return
+		}
+
 		switch errReason {
 		case ErrSuccess:
 			// stop normally, the context is closed

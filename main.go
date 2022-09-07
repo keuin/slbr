@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/akamensky/argparse"
 	"github.com/spf13/viper"
+	"log"
 	"os"
 	"os/signal"
 	"sync"
@@ -114,8 +115,11 @@ func main() {
 	for _, task := range tasks {
 		fmt.Println(task.String())
 	}
-	fmt.Println("========================")
+	fmt.Println("")
 
+	logger := log.Default()
+
+	logger.Printf("Starting tasks...")
 	chResult := make(chan recording.TaskResult)
 	wg := sync.WaitGroup{}
 	ctx, cancelTasks := context.WithCancel(context.Background())
@@ -131,18 +135,20 @@ func main() {
 
 	chSigInt := make(chan os.Signal)
 	signal.Notify(chSigInt, os.Interrupt)
+loop:
 	for {
 		select {
 		case <-chSigInt:
-			fmt.Println("Stopping...")
+			logger.Println("YABR is stopped.")
 			cancelTasks()
+			break loop
 		case result := <-chResult:
 			err := result.Error
 			if err != nil {
-				fmt.Printf("A task stopped with an error (room %v): %v\n",
+				logger.Printf("A task stopped with an error (room %v): %v\n",
 					result.Task.RoomId, result.Error)
 			} else {
-				fmt.Printf("Task stopped (room %v): %v\n",
+				logger.Printf("Task stopped (room %v): %v\n",
 					result.Task.RoomId, result.Task.String())
 			}
 		}
