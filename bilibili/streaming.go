@@ -3,6 +3,7 @@ package bilibili
 import (
 	"bilibili-livestream-archiver/common"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -59,14 +60,13 @@ func (b Bilibili) CopyLiveStream(
 	defer cancelGuardian()
 
 	// blocking copy
-	n, err, isCancelled := common.Copy(ctx, out, resp.Body)
+	n, err := common.Copy(ctx, out, resp.Body)
 
-	if isCancelled {
+	if errors.Is(err, context.Canceled) {
 		// cancelled by context
 		// this error is useless
 		err = nil
-	}
-	if !isCancelled && err != nil {
+	} else {
 		// real error happens
 		b.error.Printf("Stream copying was interrupted unexpectedly: %v", err)
 	}
