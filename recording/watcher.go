@@ -147,6 +147,10 @@ func watch(
 					}
 				default:
 					switch info.Command {
+					case "ENTRY_EFFECT":
+						fallthrough
+					case "ONLINE_RANK_V2":
+						fallthrough
 					case "ONLINE_RANK_COUNT":
 						fallthrough
 					case "STOP_LIVE_ROOM_LIST":
@@ -190,7 +194,7 @@ func watch(
 						}
 						logger.Printf("Dan Mu: %v\n", dmm.String())
 					default:
-						logger.Printf("Ignoring server message %v %v %v\n",
+						logger.Printf("Ignore unhandled server message %v %v %v\n",
 							info.Command, msg.Operation, string(msg.Body))
 					}
 				}
