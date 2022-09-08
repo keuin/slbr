@@ -33,9 +33,9 @@ func RunTask(ctx context.Context, wg *sync.WaitGroup, task *TaskConfig) {
 	err := doTask(ctx, task)
 	logger := log.Default()
 	if err != nil && !errors.Is(err, context.Canceled) {
-		logger.Printf("A task stopped with an error (room %v): %v\n", task.RoomId, err)
+		logger.Printf("A task stopped with an error (room %v): %v", task.RoomId, err)
 	} else {
-		logger.Printf("Task stopped (room %v): %v\n", task.RoomId, task.String())
+		logger.Printf("Task stopped (room %v): %v", task.RoomId, task.String())
 	}
 }
 
@@ -43,7 +43,7 @@ func RunTask(ctx context.Context, wg *sync.WaitGroup, task *TaskConfig) {
 func doTask(ctx context.Context, task *TaskConfig) error {
 	logger := log.Default()
 	bi := bilibili.NewBilibili()
-	logger.Printf("Start task: room %v\n", task.RoomId)
+	logger.Printf("Start task: room %v", task.RoomId)
 
 	authKey, url, err := getStreamingServer(task, logger, bi)
 	if err != nil {
@@ -73,7 +73,7 @@ func doTask(ctx context.Context, task *TaskConfig) error {
 	for {
 		select {
 		case <-ctx.Done():
-			logger.Printf("Task (room %v) is stopped.\n", task.RoomId)
+			logger.Printf("Task (room %v) is stopped.", task.RoomId)
 			return nil
 		case <-chWatcherDown:
 			// watcher is down and unrecoverable, stop this task
@@ -99,12 +99,12 @@ func doTask(ctx context.Context, task *TaskConfig) error {
 								time.Sleep(3 * time.Second)
 							}
 							if sec > 0 {
-								logger.Printf("Sleep for %vs before restart recording.\n", sec)
+								logger.Printf("Sleep for %vs before restart recording.", sec)
 								time.Sleep(time.Duration(sec) * time.Second)
 							}
 						}
 					}
-					logger.Printf("Task is cancelled. Stop recording. (room %v)\n", task.RoomId)
+					logger.Printf("Task is cancelled. Stop recording. (room %v)", task.RoomId)
 				}()
 				lastStatusIsLiving = true
 			case WatcherLiveStop:
@@ -121,7 +121,7 @@ func record(
 	task *TaskConfig,
 ) (cancelled bool, err error) {
 	logger := log.Default()
-	logger.Printf("INFO: Getting room profile...\n")
+	logger.Printf("INFO: Getting room profile...")
 
 	profile, err := common.AutoRetry(
 		ctx,
@@ -138,7 +138,7 @@ func record(
 	}
 	if err != nil {
 		// still error, abort
-		logger.Printf("ERROR: Cannot get room information: %v. Stopping current task.\n", err)
+		logger.Printf("ERROR: Cannot get room information: %v. Stopping current task.", err)
 		cancelled = true
 		return
 	}
@@ -192,17 +192,17 @@ func record(
 		err := fWriter.Flush()
 		if err != nil {
 			logger := log.Default()
-			logger.Printf("Failed to flush buffered file write data: %v\n", err)
+			logger.Printf("Failed to flush buffered file write data: %v", err)
 		}
 	}()
-	logger.Printf("Write buffer size: %v byte\n", fWriter.Size())
+	logger.Printf("Write buffer size: %v byte", fWriter.Size())
 
 	logger.Printf("Recording live stream to file \"%v\"...", filePath)
 	err = bi.CopyLiveStream(ctx, task.RoomId, streamSource, fWriter)
 	cancelled = err == nil || errors.Is(err, context.Canceled)
 	if !cancelled {
 		// real error happens
-		logger.Printf("Error when copying live stream: %v\n", err)
+		logger.Printf("Error when copying live stream: %v", err)
 	}
 	return
 }
@@ -248,12 +248,12 @@ func watcherRecoverableLoop(
 			// stop normally, the context is closed
 			return
 		case ErrProtocol:
-			logger.Printf("FATAL: Watcher stopped due to an unrecoverable error: %v\n", err)
+			logger.Printf("FATAL: Watcher stopped due to an unrecoverable error: %v", err)
 			// shutdown the whole task
 			chWatcherDown <- struct{}{}
 			return
 		case ErrTransport:
-			logger.Printf("ERROR: Watcher stopped due to an I/O error: %v\n", err)
+			logger.Printf("ERROR: Watcher stopped due to an I/O error: %v", err)
 			waitSeconds := task.Transport.RetryIntervalSeconds
 			logger.Printf(
 				"WARNING: Sleep for %v second(s) before restarting watcher.\n",

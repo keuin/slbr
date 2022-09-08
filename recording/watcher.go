@@ -128,7 +128,7 @@ func watch(
 
 			switch msg.Operation {
 			case dmpkg.OpLayer7Data:
-				//logger.Printf("server message: op %v, body %v\n", msg.Operation, string(msg.Body))
+				//logger.Printf("server message: op %v, body %v", msg.Operation, string(msg.Body))
 				var info liveInfo
 				err := json.Unmarshal(msg.Body, &info)
 				if err != nil {
@@ -158,7 +158,7 @@ func watch(
 						fallthrough
 					case "HOT_RANK_CHANGED_V2":
 						// useless message
-						logger.Printf("Ignore message: %v\n", info.Command)
+						logger.Printf("Ignore message: %v", info.Command)
 					case "WATCHED_CHANGE":
 						// number of watched people changed
 						obj, exists := info.Data["num"]
@@ -167,7 +167,7 @@ func watch(
 						}
 						viewersNum, ok := obj.(float64)
 						if !ok {
-							logger.Printf("Cannot parse watched people number: %v\n", obj)
+							logger.Printf("Cannot parse watched people number: %v", obj)
 							continue
 						}
 						logger.Printf("The number of viewers (room: %v): %v", roomId, viewersNum)
@@ -175,7 +175,7 @@ func watch(
 						var raw dmmsg.RawInteractWordMessage
 						err = json.Unmarshal(msg.Body, &raw)
 						if err != nil {
-							logger.Printf("Cannot parse RawInteractWordMessage JSON: %v\n", err)
+							logger.Printf("Cannot parse RawInteractWordMessage JSON: %v", err)
 							continue
 						}
 						logger.Printf("Interact word message: user: %v medal: %v",
@@ -184,22 +184,22 @@ func watch(
 						var raw dmmsg.RawDanMuMessage
 						err = json.Unmarshal(msg.Body, &raw)
 						if err != nil {
-							logger.Printf("Cannot parse Dan Mu message as JSON: %v\n", err)
+							logger.Printf("Cannot parse Dan Mu message as JSON: %v", err)
 							continue
 						}
 						dmm, err := dmmsg.ParseDanmakuMessage(raw)
 						if err != nil {
-							logger.Printf("Cannot parse Dan Mu message JSON: %v\n", err)
+							logger.Printf("Cannot parse Dan Mu message JSON: %v", err)
 							continue
 						}
-						logger.Printf("Dan Mu: %v\n", dmm.String())
+						logger.Printf("Dan Mu: %v", dmm.String())
 					default:
-						logger.Printf("Ignore unhandled server message %v %v %v\n",
+						logger.Printf("Ignore unhandled server message %v %v %v",
 							info.Command, msg.Operation, string(msg.Body))
 					}
 				}
 			default:
-				logger.Printf("Server message: %v\n", msg.String())
+				logger.Printf("Server message: %v", msg.String())
 			}
 
 		}
