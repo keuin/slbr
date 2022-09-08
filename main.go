@@ -55,7 +55,7 @@ func getTasks() (tasks []recording.TaskConfig) {
 		"b", "disk-write-buffer",
 		&argparse.Options{
 			Required: false,
-			Help:     "Specify disk write buffer size (bytes). The real minimum buffer size is determined by OS.",
+			Help:     "Specify disk write buffer size (bytes). The real minimum buffer size is determined by OS",
 			Default:  -1,
 		},
 	)
