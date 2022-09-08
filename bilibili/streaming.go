@@ -5,8 +5,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -15,7 +15,9 @@ func (b Bilibili) CopyLiveStream(
 	ctx context.Context,
 	roomId common.RoomId,
 	stream StreamingUrlInfo,
-	out io.Writer,
+	out *os.File,
+	buffer []byte,
+	readChunkSize int,
 ) (err error) {
 	url := stream.URL
 	if !strings.HasPrefix(url, "https://") &&
@@ -60,7 +62,7 @@ func (b Bilibili) CopyLiveStream(
 	defer cancelGuardian()
 
 	// blocking copy
-	n, err := common.Copy(ctx, out, resp.Body)
+	n, err := common.CopyToFileWithBuffer(ctx, out, resp.Body, buffer, readChunkSize, false)
 
 	if err != nil && !errors.Is(err, context.Canceled) {
 		// real error happens

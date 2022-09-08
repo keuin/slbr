@@ -8,7 +8,6 @@ package recording
 import (
 	"bilibili-livestream-archiver/bilibili"
 	"bilibili-livestream-archiver/common"
-	"bufio"
 	"context"
 	"encoding/json"
 	"errors"
@@ -25,6 +24,8 @@ type TaskResult struct {
 	Task  *TaskConfig
 	Error error
 }
+
+const kReadChunkSize = 64 * 1024
 
 // RunTask start a monitor&download task and
 // put its execution result into a channel.
@@ -189,19 +190,17 @@ func record(
 	}
 	defer func() { _ = file.Close() }()
 
-	// buffered writer
-	fWriter := bufio.NewWriterSize(file, task.Download.DiskWriteBufferBytes)
-	defer func() {
-		err := fWriter.Flush()
-		if err != nil {
-			logger := log.Default()
-			logger.Printf("Failed to flush buffered file write data: %v", err)
-		}
-	}()
-	logger.Printf("Write buffer size: %v byte", fWriter.Size())
-
+	writeBufferSize := task.Download.DiskWriteBufferBytes
+	if writeBufferSize < kReadChunkSize {
+		writeBufferSize = kReadChunkSize
+	}
+	if mod := writeBufferSize % kReadChunkSize; mod != 0 {
+		writeBufferSize += kReadChunkSize - mod
+	}
+	writeBuffer := make([]byte, writeBufferSize)
+	logger.Printf("Write buffer size: %v byte", writeBufferSize)
 	logger.Printf("Recording live stream to file \"%v\"...", filePath)
-	err = bi.CopyLiveStream(ctx, task.RoomId, streamSource, fWriter)
+	err = bi.CopyLiveStream(ctx, task.RoomId, streamSource, file, writeBuffer, kReadChunkSize)
 	cancelled = err == nil || errors.Is(err, context.Canceled)
 	if !cancelled {
 		// real error happens
