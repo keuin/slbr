@@ -139,10 +139,7 @@ func main() {
 
 	logger.Printf("Starting tasks...")
 	wg := sync.WaitGroup{}
-	defer func() {
-		wg.Wait()
-		logger.Println("Stopping YABR...")
-	}()
+
 	ctx, cancelTasks := context.WithCancel(context.Background())
 	for _, task := range tasks {
 		wg.Add(1)
@@ -155,18 +152,23 @@ func main() {
 		syscall.SIGHUP,
 		syscall.SIGINT,
 		syscall.SIGTERM)
-	go func() {
-		<-chSigStop
-		cancelTasks()
-	}()
 
 	chSigQuit := make(chan os.Signal)
 	signal.Notify(chSigQuit, syscall.SIGQUIT)
 	go func() {
-		<-chSigQuit
-		os.Exit(0)
+		select {
+		case <-chSigStop:
+			logger.Println("Stopping all tasks...")
+			cancelTasks()
+		case <-chSigQuit:
+			logger.Println("Aborted.")
+			os.Exit(0)
+		}
 	}()
 
 	// block main goroutine on task goroutines
-	wg.Wait()
+	defer func() {
+		wg.Wait()
+		logger.Println("YABR is stopped.")
+	}()
 }
