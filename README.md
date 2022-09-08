@@ -15,7 +15,7 @@ Then you should give SLBR *(suck-less bilibili live recorder)* a try.
 
 ## 2. Why another Bilibili livestream recorder
 
-All the other recorders suck. So I write my own recorder, which, I hope, sucks less.
+All the other recorders are suck. So I write my own recorder, which, I hope, sucks less.
 
 ## Reference
 
@@ -28,3 +28,9 @@ https://github.com/SocialSisterYi/bilibili-API-collect
 https://github.com/hr3lxphr6j/bililive-go
 
 https://github.com/zyzsdy/biliroku
+
+## TODO list
+
+- cli override config file
+- proper default values for config file
+- user manual
