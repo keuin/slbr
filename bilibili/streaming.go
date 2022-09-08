@@ -32,7 +32,7 @@ func (b Bilibili) CopyLiveStream(
 	r.Header.Set("Referer",
 		fmt.Sprintf("https://live.bilibili.com/blanc/%d?liteVersion=true", roomId))
 
-	resp, err := b.http.Do(r)
+	resp, err := b.Do(r)
 	if err != nil {
 		b.error.Printf("Cannot make HTTP GET request on %v: %v\n", url, err)
 		return

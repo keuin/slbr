@@ -42,7 +42,9 @@ func RunTask(ctx context.Context, wg *sync.WaitGroup, task *TaskConfig) {
 // doTask do the actual work, but returns synchronously.
 func doTask(ctx context.Context, task *TaskConfig) error {
 	logger := log.Default()
-	bi := bilibili.NewBilibili()
+	netTypes := task.Transport.AllowedNetworkTypes
+	logger.Printf("Network types: %v", netTypes)
+	bi := bilibili.NewBilibiliWithNetType(netTypes)
 	logger.Printf("Start task: room %v", task.RoomId)
 
 	authKey, url, err := getStreamingServer(task, logger, bi)
@@ -143,6 +145,7 @@ func record(
 		return
 	}
 
+	logger.Printf("INFO: Getting stream url...")
 	urlInfo, err := common.AutoRetry(
 		ctx,
 		func() (bilibili.RoomUrlInfoResponse, error) {

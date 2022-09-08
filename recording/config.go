@@ -1,6 +1,7 @@
 package recording
 
 import (
+	"bilibili-livestream-archiver/bilibili"
 	"bilibili-livestream-archiver/common"
 	"fmt"
 )
@@ -13,9 +14,10 @@ type TaskConfig struct {
 }
 
 type TransportConfig struct {
-	SocketTimeoutSeconds int `mapstructure:"socket_timeout_seconds"`
-	RetryIntervalSeconds int `mapstructure:"retry_interval_seconds"`
-	MaxRetryTimes        int `mapstructure:"max_retry_times"`
+	SocketTimeoutSeconds int                  `mapstructure:"socket_timeout_seconds"`
+	RetryIntervalSeconds int                  `mapstructure:"retry_interval_seconds"`
+	MaxRetryTimes        int                  `mapstructure:"max_retry_times"`
+	AllowedNetworkTypes  []bilibili.IpNetType `mapstructure:"allowed_network_types"`
 }
 
 type DownloadConfig struct {

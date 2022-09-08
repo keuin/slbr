@@ -1,9 +1,11 @@
 package bilibili
 
 import (
+	"bilibili-livestream-archiver/common"
 	"encoding/json"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"strings"
 )
@@ -37,7 +39,7 @@ func callGet[T BaseResponse[V], V any](b Bilibili, url string) (resp T, err erro
 		return
 	}
 
-	r, err := b.http.Do(req)
+	r, err := b.Do(req)
 	if err != nil {
 		logger.Printf("ERROR: HTTP Request failed on API %v: %v", url, err)
 		return
@@ -64,5 +66,27 @@ func callGet[T BaseResponse[V], V any](b Bilibili, url string) (resp T, err erro
 	}
 
 	b.debug.Printf("HTTP %v, len: %v bytes, url: %v", r.StatusCode, len(data), url)
+	return
+}
+
+func (b Bilibili) Do(req *http.Request) (resp *http.Response, err error) {
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.DialTLSContext = nil
+
+	np := newNetProbe(b.netTypes)
+	var dialer net.Dialer
+	for netCtx, typeName := np.NextNetworkType(dialer); netCtx != nil; netCtx, typeName = np.NextNetworkType(dialer) {
+		transport.DialContext = netCtx
+		b.http.Transport = transport
+		resp, err = b.http.Do(req)
+
+		isOpErr := common.IsErrorOfType(err, &net.OpError{})
+		isAddrErr := common.IsErrorOfType(err, &net.AddrError{})
+		if err == nil || !isOpErr || !isAddrErr {
+			// return the first success request
+			b.loggerCommon.info.Printf("Request success with network %v.", typeName)
+			return
+		}
+	}
 	return
 }
