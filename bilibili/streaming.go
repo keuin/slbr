@@ -62,10 +62,15 @@ func (b Bilibili) CopyLiveStream(
 	// blocking copy
 	n, err := common.Copy(ctx, out, resp.Body)
 
-	if !errors.Is(err, context.Canceled) {
+	if err != nil && !errors.Is(err, context.Canceled) {
 		// real error happens
 		b.error.Printf("Stream copying was interrupted unexpectedly: %v", err)
 	}
+
+	if err == nil {
+		b.info.Printf("The live is ended. (room %v)", roomId)
+	}
+
 	b.info.Printf("Bytes copied: %v", n)
 	return err
 }
