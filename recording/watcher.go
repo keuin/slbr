@@ -165,12 +165,12 @@ func watch(
 						if !exists {
 							continue
 						}
-						watchedPeopleNumber, ok := obj.(float64)
+						viewersNum, ok := obj.(float64)
 						if !ok {
 							logger.Printf("Cannot parse watched people number: %v\n", obj)
 							continue
 						}
-						logger.Printf("Watched people (room: %v): %v", roomId, watchedPeopleNumber)
+						logger.Printf("The number of viewers (room: %v): %v", roomId, viewersNum)
 					case "INTERACT_WORD":
 						var raw dmmsg.RawInteractWordMessage
 						err = json.Unmarshal(msg.Body, &raw)
