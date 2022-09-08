@@ -1,6 +1,10 @@
-# SLBR: A Bilibili livestream recorder that sucks less
+# SLBR: Suck-Less Bilibili live Recorder
 
-## 1. Features
+## Why another Bilibili livestream recorder?
+
+Because **all** the other recorders are suck. So I write my own recorder, which, I hope, sucks less.
+
+## Features
 
 If you want a Bilibili recorder featured with:
 
@@ -12,10 +16,6 @@ If you want a Bilibili recorder featured with:
 - **Just works**
 
 Then you should give SLBR *(suck-less bilibili live recorder)* a try.
-
-## 2. Why another Bilibili livestream recorder
-
-All the other recorders are suck. So I write my own recorder, which, I hope, sucks less.
 
 ## Reference
 
