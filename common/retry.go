@@ -17,8 +17,9 @@ func AutoRetry[T any](
 	retryInterval time.Duration,
 	logger *log.Logger) (T, error) {
 	var err error
-	for i := 0; i < maxRetryTimes; i++ {
-		ret, err := supplier()
+	var ret T
+	for i := 0; i < maxRetryTimes+1; i++ {
+		ret, err = supplier()
 		if err != nil {
 			if logger != nil {
 				logger.Printf("Try %v/%v (sleep %vs): %v",
