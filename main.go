@@ -33,30 +33,33 @@ func getTasks() (tasks []recording.TaskConfig) {
 		"c", "config",
 		&argparse.Options{
 			Required: false,
-			Help:     "Specify which configuration file to use. JSON, TOML and YAML are all supported.",
+			Help:     "Specify which configuration file to use. JSON, TOML and YAML are all supported",
 		},
 	)
 	rooms := parser.IntList(
 		"s", "room",
 		&argparse.Options{
 			Required: false,
-			Help:     "The room id to record. Set this to run without config file",
+			Help: "Specify which room to record. " +
+				"The ID is included in bilibili live webpage url. " +
+				"Set this to run without config file",
 		},
 	)
 	saveToPtr := parser.String(
 		"o", "save-to",
 		&argparse.Options{
 			Required: false,
-			Help:     "Specify which configuration file to use",
-			Default:  ".",
+			Help: "Specify the directory where to save records. " +
+				"If not set, process working directory is used",
 		},
 	)
 	diskBufSizePtr := parser.Int(
 		"b", "disk-write-buffer",
 		&argparse.Options{
 			Required: false,
-			Help:     "Specify disk write buffer size (bytes). The real minimum buffer size is determined by OS",
-			Default:  -1,
+			Help: "Specify disk write buffer size (bytes). " +
+				"The real minimum buffer size is determined by OS",
+			Default: 4194304,
 		},
 	)
 
@@ -107,7 +110,7 @@ func getTasks() (tasks []recording.TaskConfig) {
 	// generate task list from cli
 	taskCount := len(*rooms)
 	tasks = make([]recording.TaskConfig, taskCount)
-	saveTo := *saveToPtr
+	saveTo := common.Zeroable[string](*saveToPtr).OrElse(".")
 	diskBufSize := *diskBufSizePtr
 	for i := 0; i < taskCount; i++ {
 		tasks[i] = recording.TaskConfig{
