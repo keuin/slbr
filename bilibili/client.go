@@ -5,11 +5,10 @@ This struct is a facade of all necessary Bilibili HTTP API wrappers.
 package bilibili
 
 import (
+	"bilibili-livestream-archiver/logging"
 	"context"
-	"log"
 	"net"
 	"net/http"
-	"os"
 )
 
 const (
@@ -21,19 +20,12 @@ const (
 type Bilibili struct {
 	userAgent string
 	http      *http.Client
-	loggerCommon
-	ctx      context.Context
-	netTypes []IpNetType
+	ctx       context.Context
+	netTypes  []IpNetType
+	logger    logging.Logger
 }
 
-func NewBilibiliWithContext(ctx context.Context, netTypes []IpNetType) Bilibili {
-	logger := loggerCommon{
-		debug: log.New(os.Stderr, "DEBUG: ", log.Ldate|log.Ltime|log.Lshortfile),
-		info:  log.New(os.Stderr, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile),
-		warn:  log.New(os.Stderr, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile),
-		error: log.New(os.Stderr, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile),
-	}
-
+func NewBilibiliWithContext(ctx context.Context, netTypes []IpNetType, logger logging.Logger) Bilibili {
 	var nets []IpNetType
 	nets = append(nets, netTypes...)
 	if len(nets) == 0 {
@@ -47,19 +39,19 @@ func NewBilibiliWithContext(ctx context.Context, netTypes []IpNetType) Bilibili 
 	transport.DialContext, _ = np.NextNetworkType(dialer)
 
 	return Bilibili{
-		loggerCommon: logger,
-		userAgent:    kUserAgent,
-		http:         http.DefaultClient,
-		ctx:          ctx,
-		netTypes:     nets,
+		logger:    logger,
+		userAgent: kUserAgent,
+		http:      http.DefaultClient,
+		ctx:       ctx,
+		netTypes:  nets,
 	}
 }
 
-func NewBilibiliWithNetType(netTypes []IpNetType) Bilibili {
+func NewBilibiliWithNetType(netTypes []IpNetType, logger logging.Logger) Bilibili {
 	ctx := context.Background()
-	return NewBilibiliWithContext(ctx, netTypes)
+	return NewBilibiliWithContext(ctx, netTypes, logger)
 }
 
-func NewBilibili() Bilibili {
-	return NewBilibiliWithNetType(nil)
+func NewBilibili(logger logging.Logger) Bilibili {
+	return NewBilibiliWithNetType(nil, logger)
 }

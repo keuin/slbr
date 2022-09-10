@@ -5,10 +5,10 @@ import (
 	"bilibili-livestream-archiver/danmaku"
 	"bilibili-livestream-archiver/danmaku/dmmsg"
 	"bilibili-livestream-archiver/danmaku/dmpkg"
+	"bilibili-livestream-archiver/logging"
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"time"
 )
 
@@ -53,10 +53,8 @@ func watch(
 	roomId common.RoomId,
 	liveStatusChecker func() (bool, error),
 	chEvent chan<- WatcherEvent,
+	logger logging.Logger,
 ) (error, ErrorReason) {
-
-	logger := log.Default()
-
 	var err error
 
 	dm := danmaku.NewDanmakuClient()
@@ -70,7 +68,7 @@ func watch(
 	defer func() { _ = dm.Disconnect() }()
 
 	// the danmaku server requires an auth token and room id when connected
-	logger.Println("ws connected. Authenticating...")
+	logger.Info("ws connected. Authenticating...")
 	err = dm.Authenticate(roomId, authKey)
 	if err != nil {
 		return fmt.Errorf("auth failed: %w", err), ErrProtocol
@@ -92,17 +90,17 @@ func watch(
 	heartBeatTimer := time.NewTicker(kHeartBeatInterval)
 	defer func() { heartBeatTimer.Stop() }()
 
-	logger.Println("Checking initial live status...")
+	logger.Info("Checking initial live status...")
 	isLiving, err := liveStatusChecker()
 	if err != nil {
 		return fmt.Errorf("check initial live status failed: %w", err), ErrTransport
 	}
 
 	if isLiving {
-		logger.Println("The live is already started. Start recording immediately.")
+		logger.Info("The live is already started. Start recording immediately.")
 		chEvent <- WatcherLiveStart
 	} else {
-		logger.Println("The live is not started yet. Waiting...")
+		logger.Info("The live is not started yet. Waiting...")
 	}
 
 	for {
@@ -132,7 +130,7 @@ func watch(
 				var info liveInfo
 				err := json.Unmarshal(msg.Body, &info)
 				if err != nil {
-					logger.Printf("ERROR: invalid JSON: \"%v\", exchange: %v", string(msg.Body), msg)
+					logger.Error("Invalid JSON: \"%v\", exchange: %v", string(msg.Body), msg)
 					return fmt.Errorf("decode server message body JSON failed: %w", err), ErrProtocol
 				}
 				switch info.Command {
@@ -158,7 +156,7 @@ func watch(
 						fallthrough
 					case "HOT_RANK_CHANGED_V2":
 						// useless message
-						logger.Printf("Ignore message: %v", info.Command)
+						logger.Info("Ignore message: %v", info.Command)
 					case "WATCHED_CHANGE":
 						// number of watched people changed
 						obj, exists := info.Data["num"]
@@ -167,39 +165,39 @@ func watch(
 						}
 						viewersNum, ok := obj.(float64)
 						if !ok {
-							logger.Printf("Cannot parse watched people number: %v", obj)
+							logger.Error("Cannot parse watched people number: %v", obj)
 							continue
 						}
-						logger.Printf("The number of viewers (room: %v): %v", roomId, viewersNum)
+						logger.Info("The number of viewers (room: %v): %v", roomId, viewersNum)
 					case "INTERACT_WORD":
 						var raw dmmsg.RawInteractWordMessage
 						err = json.Unmarshal(msg.Body, &raw)
 						if err != nil {
-							logger.Printf("Cannot parse RawInteractWordMessage JSON: %v", err)
+							logger.Error("Cannot parse RawInteractWordMessage JSON: %v", err)
 							continue
 						}
-						logger.Printf("Interact word message: user: %v medal: %v",
+						logger.Info("Interact word message: user: %v medal: %v",
 							raw.Data.UserName, raw.Data.FansMedal.Name)
 					case "DANMU_MSG":
 						var raw dmmsg.RawDanMuMessage
 						err = json.Unmarshal(msg.Body, &raw)
 						if err != nil {
-							logger.Printf("Cannot parse Dan Mu message as JSON: %v", err)
+							logger.Error("Cannot parse Dan Mu message as JSON: %v", err)
 							continue
 						}
 						dmm, err := dmmsg.ParseDanmakuMessage(raw)
 						if err != nil {
-							logger.Printf("Cannot parse Dan Mu message JSON: %v", err)
+							logger.Error("Cannot parse Dan Mu message JSON: %v", err)
 							continue
 						}
-						logger.Printf("Dan Mu: %v", dmm.String())
+						logger.Info("Dan Mu: %v", dmm.String())
 					default:
-						logger.Printf("Ignore unhandled server message %v %v %v",
+						logger.Info("Ignore unhandled server message %v %v %v",
 							info.Command, msg.Operation, string(msg.Body))
 					}
 				}
 			default:
-				logger.Printf("Server message: %v", msg.String())
+				logger.Info("Server message: %v", msg.String())
 			}
 
 		}

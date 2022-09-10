@@ -12,7 +12,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"path"
 	"time"
@@ -57,7 +56,7 @@ func (t *RunningTask) runTaskWithAutoRestart() error {
 func tryRunTask(t *RunningTask) error {
 	netTypes := t.Transport.AllowedNetworkTypes
 	t.logger.Info("Network types: %v", netTypes)
-	bi := bilibili.NewBilibiliWithNetType(netTypes)
+	bi := bilibili.NewBilibiliWithNetType(netTypes, t.logger)
 	t.logger.Info("Start task: room %v", t.RoomId)
 
 	t.logger.Info("Getting notification server info...")
@@ -135,8 +134,7 @@ func record(
 	bi bilibili.Bilibili,
 	task *RunningTask,
 ) (cancelled bool, err error) {
-	logger := log.Default()
-	logger.Printf("INFO: Getting room profile...")
+	task.logger.Info("Getting room profile...")
 
 	profile, err := common.AutoRetry(
 		ctx,
@@ -145,7 +143,7 @@ func record(
 		},
 		task.Transport.MaxRetryTimes,
 		time.Duration(task.Transport.RetryIntervalSeconds)*time.Second,
-		logger,
+		&task.logger,
 	)
 	if errors.Is(err, context.Canceled) {
 		cancelled = true
@@ -153,12 +151,12 @@ func record(
 	}
 	if err != nil {
 		// still error, abort
-		logger.Printf("ERROR: Cannot get room information: %v. Stopping current task.", err)
+		task.logger.Error("Cannot get room information: %v. Stopping current task.", err)
 		cancelled = true
 		return
 	}
 
-	logger.Printf("INFO: Getting stream url...")
+	task.logger.Info("Getting stream url...")
 	urlInfo, err := common.AutoRetry(
 		ctx,
 		func() (bilibili.RoomUrlInfoResponse, error) {
@@ -166,14 +164,14 @@ func record(
 		},
 		task.Transport.MaxRetryTimes,
 		time.Duration(task.Transport.RetryIntervalSeconds)*time.Second,
-		logger,
+		&task.logger,
 	)
 	if errors.Is(err, context.Canceled) {
 		cancelled = true
 		return
 	}
 	if err != nil {
-		logger.Printf("ERROR: Cannot get streaming info: %v", err)
+		task.logger.Error("Cannot get streaming info: %v", err)
 		cancelled = true
 		return
 	}
@@ -182,7 +180,7 @@ func record(
 		if err2 != nil {
 			j = []byte("(not available)")
 		}
-		logger.Printf("ERROR: No stream returned from API. Response: %v", string(j))
+		task.logger.Error("No stream returned from API. Response: %v", string(j))
 		cancelled = true
 		return
 	}
@@ -196,7 +194,7 @@ func record(
 	filePath := path.Join(task.Download.SaveDirectory, fileName)
 	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 	if err != nil {
-		logger.Printf("ERROR: Cannot open file for writing: %v", err)
+		task.logger.Error("Cannot open file for writing: %v", err)
 		cancelled = true
 		return
 	}
@@ -210,13 +208,13 @@ func record(
 		writeBufferSize += kReadChunkSize - mod
 	}
 	writeBuffer := make([]byte, writeBufferSize)
-	logger.Printf("Write buffer size: %v byte", writeBufferSize)
-	logger.Printf("Recording live stream to file \"%v\"...", filePath)
+	task.logger.Info("Write buffer size: %v byte", writeBufferSize)
+	task.logger.Info("Recording live stream to file \"%v\"...", filePath)
 	err = bi.CopyLiveStream(ctx, task.RoomId, streamSource, file, writeBuffer, kReadChunkSize)
 	cancelled = err == nil || errors.Is(err, context.Canceled)
 	if !cancelled {
 		// real error happens
-		logger.Printf("Error when copying live stream: %v", err)
+		task.logger.Error("Error when copying live stream: %v", err)
 	}
 	return
 }
@@ -248,6 +246,7 @@ func watcherRecoverableLoop(
 				return resp.Data.LiveStatus.IsStreaming(), nil
 			},
 			chWatcherEvent,
+			task.logger,
 		)
 
 		// the context is cancelled, stop watching

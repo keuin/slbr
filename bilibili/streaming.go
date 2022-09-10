@@ -27,7 +27,7 @@ func (b Bilibili) CopyLiveStream(
 
 	r, err := b.newGet(url)
 	if err != nil {
-		b.error.Printf("Cannot create HTTP GET instance on %v: %v", url, err)
+		b.logger.Error("Cannot create HTTP GET instance on %v: %v", url, err)
 		return err
 	}
 
@@ -36,7 +36,7 @@ func (b Bilibili) CopyLiveStream(
 
 	resp, err := b.Do(r)
 	if err != nil {
-		b.error.Printf("Cannot make HTTP GET request on %v: %v\n", url, err)
+		b.logger.Error("Cannot make HTTP GET request on %v: %v\n", url, err)
 		return
 	}
 
@@ -56,13 +56,13 @@ func (b Bilibili) CopyLiveStream(
 	n, err := common.CopyToFileWithBuffer(ctx, out, resp.Body, buffer, readChunkSize, false)
 
 	if err != nil && !errors.Is(err, context.Canceled) {
-		b.error.Printf("Stream copying was interrupted unexpectedly: %v", err)
+		b.logger.Error("Stream copying was interrupted unexpectedly: %v", err)
 	}
 
 	if err == nil {
-		b.info.Printf("The live is ended. (room %v)", roomId)
+		b.logger.Info("The live is ended. (room %v)", roomId)
 	}
 
-	b.info.Printf("Total downloaded: %v", common.PrettyBytes(uint64(n)))
+	b.logger.Info("Total downloaded: %v", common.PrettyBytes(uint64(n)))
 	return err
 }

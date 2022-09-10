@@ -1,8 +1,8 @@
 package common
 
 import (
+	"bilibili-livestream-archiver/logging"
 	"context"
-	"log"
 	"time"
 )
 
@@ -15,14 +15,14 @@ func AutoRetry[T any](
 	supplier func() (T, error),
 	maxRetryTimes int,
 	retryInterval time.Duration,
-	logger *log.Logger) (T, error) {
+	logger *logging.Logger) (T, error) {
 	var err error
 	var ret T
 	for i := 0; i < maxRetryTimes+1; i++ {
 		ret, err = supplier()
 		if err != nil {
 			if logger != nil {
-				logger.Printf("Try %v/%v (sleep %vs): %v",
+				logger.Info("Try %v/%v (sleep %vs): %v",
 					i, maxRetryTimes, retryInterval, err)
 			}
 			timer := time.NewTimer(retryInterval)
@@ -40,7 +40,7 @@ func AutoRetry[T any](
 		return ret, nil
 	}
 	if logger != nil {
-		logger.Printf("Max retry times reached, but it still fails. Last error: %v", err)
+		logger.Error("Max retry times reached, but it still fails. Last error: %v", err)
 	}
 	var zero T
 	return zero, err

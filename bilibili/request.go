@@ -18,7 +18,7 @@ func (b Bilibili) newRequest(
 ) (req *http.Request, err error) {
 	req, err = http.NewRequestWithContext(b.ctx, method, url, body)
 	if err != nil {
-		b.error.Printf("Cannot create HTTP request instance: %v. Method: %v, URL: %v", err, method, url)
+		b.logger.Error("Cannot create HTTP request instance: %v. Method: %v, URL: %v", err, method, url)
 		return
 	}
 	req.Header.Set("User-Agent", b.userAgent)
@@ -48,24 +48,24 @@ func callGet[T BaseResponse[V], V any](b Bilibili, url string) (resp T, err erro
 
 	err = validateHttpStatus(r)
 	if err != nil {
-		b.error.Printf("%v", err)
+		b.logger.Error("%v", err)
 		return
 	}
 
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
-		b.error.Printf("Error when reading HTTP response on API %v: %v", url, err)
+		b.logger.Error("Error when reading HTTP response on API %v: %v", url, err)
 		return
 	}
 
 	err = json.Unmarshal(data, &resp)
 	if err != nil {
-		b.error.Printf("Invalid JSON body of HTTP response on API %v: %v. Text: \"%v\"",
+		b.logger.Error("Invalid JSON body of HTTP response on API %v: %v. Text: \"%v\"",
 			url, err, string(data))
 		return
 	}
 
-	b.debug.Printf("HTTP %v, len: %v bytes, url: %v", r.StatusCode, len(data), url)
+	b.logger.Debug("HTTP %v, len: %v bytes, url: %v", r.StatusCode, len(data), url)
 	return
 }
 
@@ -84,7 +84,7 @@ func (b Bilibili) Do(req *http.Request) (resp *http.Response, err error) {
 		isAddrErr := common.IsErrorOfType(err, &net.AddrError{})
 		if err == nil || !isOpErr || !isAddrErr {
 			// return the first success request
-			b.loggerCommon.info.Printf("Request success with network %v.", typeName)
+			b.logger.Info("Request success with network %v.", typeName)
 			return
 		}
 	}
