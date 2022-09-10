@@ -77,7 +77,7 @@ func getTasks() (tasks []recording.TaskConfig) {
 	fromCli := len(*rooms) > 0
 	fromFile := *configFilePtr != ""
 
-	if fromCli == fromFile {
+	if fromCli && fromFile {
 		err = fmt.Errorf("cannot specify room id argument and config file at the same time")
 		return
 	}
