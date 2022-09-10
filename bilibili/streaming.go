@@ -52,6 +52,7 @@ func (b Bilibili) CopyLiveStream(
 
 	defer func() { _ = resp.Body.Close() }()
 
+	b.logger.Info("Copying live stream...")
 	// blocking copy
 	n, err := common.CopyToFileWithBuffer(ctx, out, resp.Body, buffer, readChunkSize, false)
 
