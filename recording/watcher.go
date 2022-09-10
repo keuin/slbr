@@ -182,15 +182,15 @@ func watch(
 						var raw dmmsg.RawDanMuMessage
 						err = json.Unmarshal(msg.Body, &raw)
 						if err != nil {
-							logger.Error("Cannot parse Dan Mu message as JSON: %v", err)
+							logger.Error("Cannot parse danmaku message as JSON: %v", err)
 							continue
 						}
 						dmm, err := dmmsg.ParseDanmakuMessage(raw)
 						if err != nil {
-							logger.Error("Cannot parse Dan Mu message JSON: %v", err)
+							logger.Error("Cannot parse danmaku message JSON: %v", err)
 							continue
 						}
-						logger.Info("Dan Mu: %v", dmm.String())
+						logger.Info("Danmaku: %v", dmm.String())
 					default:
 						logger.Info("Ignore unhandled server message %v %v %v",
 							info.Command, msg.Operation, string(msg.Body))
