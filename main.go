@@ -1,7 +1,13 @@
 package main
 
+/*
+In this file we implement config file and command line arguments parsing.
+Task lifecycle management are implemented in recording package.
+*/
+
 import (
 	"bilibili-livestream-archiver/common"
+	"bilibili-livestream-archiver/logging"
 	"bilibili-livestream-archiver/recording"
 	"context"
 	"fmt"
@@ -127,23 +133,32 @@ func getTasks() (tasks []recording.TaskConfig) {
 }
 
 func main() {
-	tasks := getTasks()
+	logger := log.Default()
+	taskConfigs := getTasks()
+	tasks := make([]recording.RunningTask, len(taskConfigs))
 
+	wg := sync.WaitGroup{}
+	ctxTasks, cancelTasks := context.WithCancel(context.Background())
 	fmt.Println("Record tasks:")
-	for i, task := range tasks {
+	for i, task := range taskConfigs {
+		tasks[i] = recording.NewRunningTask(
+			taskConfigs[i],
+			ctxTasks,
+			func() { wg.Add(1) },
+			func() { wg.Done() },
+			logging.NewWrappedLogger(logger, fmt.Sprintf("room %v", task.RoomId)),
+		)
 		fmt.Printf("[%2d] %s\n", i+1, task)
 	}
 	fmt.Println("")
 
-	logger := log.Default()
-
 	logger.Printf("Starting tasks...")
-	wg := sync.WaitGroup{}
 
-	ctx, cancelTasks := context.WithCancel(context.Background())
-	for _, task := range tasks {
-		wg.Add(1)
-		go recording.RunTask(ctx, &wg, &task)
+	for i := range tasks {
+		err := tasks[i].StartTask()
+		if err != nil {
+			logger.Printf("Cannot start task %v (room %v): %v. Skip.", i, tasks[i].RoomId, err)
+		}
 	}
 
 	// listen on stop signals

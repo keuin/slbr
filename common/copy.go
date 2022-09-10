@@ -36,29 +36,31 @@ func CopyToFileWithBuffer(
 	}()
 
 	for {
-		if err = ctx.Err(); err != nil {
+		select {
+		case <-ctx.Done():
 			return
-		}
-		nRead, err = in.Read(buffer[off:Min[int](off+chunkSize, bufSize)])
-		if err != nil {
-			return
-		}
-		off += nRead
-		if off == bufSize {
-			// buffer is full
-			var nWritten int
-			nWritten, err = out.Write(buffer)
+		default:
+			nRead, err = in.Read(buffer[off:Min[int](off+chunkSize, bufSize)])
 			if err != nil {
 				return
 			}
-			if syncFile {
-				err = out.Sync()
+			off += nRead
+			if off == bufSize {
+				// buffer is full
+				var nWritten int
+				nWritten, err = out.Write(buffer)
 				if err != nil {
 					return
 				}
+				if syncFile {
+					err = out.Sync()
+					if err != nil {
+						return
+					}
+				}
+				written += int64(nWritten)
+				off = 0
 			}
-			written += int64(nWritten)
-			off = 0
 		}
 	}
 }

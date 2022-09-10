@@ -52,20 +52,10 @@ func (b Bilibili) CopyLiveStream(
 
 	defer func() { _ = resp.Body.Close() }()
 
-	// guard the following copy loop
-	// if the context is cancelled, stop it by closing the reader
-	guardianCtx, cancelGuardian := context.WithCancel(ctx)
-	go func() {
-		<-guardianCtx.Done()
-		_ = resp.Body.Close()
-	}()
-	defer cancelGuardian()
-
 	// blocking copy
 	n, err := common.CopyToFileWithBuffer(ctx, out, resp.Body, buffer, readChunkSize, false)
 
 	if err != nil && !errors.Is(err, context.Canceled) {
-		// real error happens
 		b.error.Printf("Stream copying was interrupted unexpectedly: %v", err)
 	}
 
@@ -73,6 +63,6 @@ func (b Bilibili) CopyLiveStream(
 		b.info.Printf("The live is ended. (room %v)", roomId)
 	}
 
-	b.info.Printf("Bytes copied: %v", n)
+	b.info.Printf("Total downloaded: %v", common.PrettyBytes(uint64(n)))
 	return err
 }
