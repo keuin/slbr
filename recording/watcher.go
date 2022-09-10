@@ -1,14 +1,14 @@
 package recording
 
 import (
-	"bilibili-livestream-archiver/common"
-	"bilibili-livestream-archiver/danmaku"
-	"bilibili-livestream-archiver/danmaku/dmmsg"
-	"bilibili-livestream-archiver/danmaku/dmpkg"
-	"bilibili-livestream-archiver/logging"
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/keuin/slbr/common"
+	"github.com/keuin/slbr/danmaku"
+	"github.com/keuin/slbr/danmaku/dmmsg"
+	"github.com/keuin/slbr/danmaku/dmpkg"
+	"github.com/keuin/slbr/logging"
 	"time"
 )
 

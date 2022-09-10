@@ -6,12 +6,12 @@ Task lifecycle management are implemented in recording package.
 */
 
 import (
-	"bilibili-livestream-archiver/common"
-	"bilibili-livestream-archiver/logging"
-	"bilibili-livestream-archiver/recording"
 	"context"
 	"fmt"
 	"github.com/akamensky/argparse"
+	"github.com/keuin/slbr/common"
+	"github.com/keuin/slbr/logging"
+	"github.com/keuin/slbr/recording"
 	"github.com/spf13/viper"
 	"log"
 	"os"

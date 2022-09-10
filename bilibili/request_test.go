@@ -1,7 +1,7 @@
 package bilibili
 
 import (
-	"bilibili-livestream-archiver/logging"
+	"github.com/keuin/slbr/logging"
 	"log"
 	"testing"
 )

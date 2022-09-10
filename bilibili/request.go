@@ -1,8 +1,8 @@
 package bilibili
 
 import (
-	"bilibili-livestream-archiver/common"
 	"encoding/json"
+	"github.com/keuin/slbr/common"
 	"io"
 	"log"
 	"net"

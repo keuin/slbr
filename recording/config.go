@@ -1,9 +1,9 @@
 package recording
 
 import (
-	"bilibili-livestream-archiver/bilibili"
-	"bilibili-livestream-archiver/common"
 	"fmt"
+	"github.com/keuin/slbr/bilibili"
+	"github.com/keuin/slbr/common"
 )
 
 type TaskConfig struct {

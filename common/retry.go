@@ -1,8 +1,8 @@
 package common
 
 import (
-	"bilibili-livestream-archiver/logging"
 	"context"
+	"github.com/keuin/slbr/logging"
 	"time"
 )
 

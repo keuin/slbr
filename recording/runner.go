@@ -6,12 +6,12 @@ The config can be load from a config file.
 package recording
 
 import (
-	"bilibili-livestream-archiver/bilibili"
-	"bilibili-livestream-archiver/common"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/keuin/slbr/bilibili"
+	"github.com/keuin/slbr/common"
 	"os"
 	"path"
 	"time"

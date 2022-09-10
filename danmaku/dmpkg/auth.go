@@ -6,9 +6,9 @@ it sends this message at first. The server then responses a OpConnectOk exchange
 package dmpkg
 
 import (
-	"bilibili-livestream-archiver/common"
 	"encoding/json"
 	"fmt"
+	"github.com/keuin/slbr/common"
 )
 
 type authInfo struct {

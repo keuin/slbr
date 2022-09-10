@@ -1,10 +1,10 @@
 package bilibili
 
 import (
-	"bilibili-livestream-archiver/common"
 	"context"
 	"errors"
 	"fmt"
+	"github.com/keuin/slbr/common"
 	"net/http"
 	"os"
 	"strings"

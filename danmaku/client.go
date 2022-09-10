@@ -7,10 +7,10 @@ The Bilibili WebSocket channel protocol is decoupled and implemented in package 
 package danmaku
 
 import (
-	"bilibili-livestream-archiver/common"
-	"bilibili-livestream-archiver/danmaku/dmpkg"
 	"context"
 	"fmt"
+	"github.com/keuin/slbr/common"
+	"github.com/keuin/slbr/danmaku/dmpkg"
 
 	"nhooyr.io/websocket"
 )

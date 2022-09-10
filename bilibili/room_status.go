@@ -5,8 +5,8 @@ This is used to check initially if it is streaming or not.
 package bilibili
 
 import (
-	"bilibili-livestream-archiver/common"
 	"fmt"
+	"github.com/keuin/slbr/common"
 )
 
 type LiveStatus int

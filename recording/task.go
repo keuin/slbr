@@ -6,9 +6,9 @@ Concrete task works are done in the `runner.go` file.
 */
 
 import (
-	"bilibili-livestream-archiver/logging"
 	"context"
 	"fmt"
+	"github.com/keuin/slbr/logging"
 )
 
 type TaskStatus int

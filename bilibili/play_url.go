@@ -1,8 +1,8 @@
 package bilibili
 
 import (
-	"bilibili-livestream-archiver/common"
 	"fmt"
+	"github.com/keuin/slbr/common"
 )
 
 type RoomUrlInfoResponse = BaseResponse[roomUrlInfo]

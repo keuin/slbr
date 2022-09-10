@@ -1,4 +1,4 @@
-module bilibili-livestream-archiver
+module github.com/keuin/slbr
 
 go 1.18
 

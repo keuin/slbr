@@ -5,8 +5,8 @@ This struct is a facade of all necessary Bilibili HTTP API wrappers.
 package bilibili
 
 import (
-	"bilibili-livestream-archiver/logging"
 	"context"
+	"github.com/keuin/slbr/logging"
 	"net"
 	"net/http"
 )
