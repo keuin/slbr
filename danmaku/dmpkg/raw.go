@@ -6,7 +6,7 @@ import (
 	"math"
 )
 
-const kMaxBodyLength = math.MaxUint32 - kHeaderLength
+const kMaxBodyLength = math.MaxUint32 - uint64(kHeaderLength)
 
 // NewPlainExchange creates a new exchange with raw body specified.
 // body: a struct or a raw string
