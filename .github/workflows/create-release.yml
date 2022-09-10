@@ -9,7 +9,7 @@ name: Create Release
 jobs:
   build:
 
-    name: Create Release
+    name: Build binary files
 
     # START build targets
     strategy:
@@ -107,36 +107,30 @@ jobs:
       - name: Get project dependencies
         run: go mod download
 
-      - name: Set asset filename for non-Windows OSes
-        if: matrix.goos != 'windows'
-        run: echo "ASSET_NAME=$GOOS-$GOARCH$GOARM" >> $GITHUB_ENV
-
-      - name: Set asset filename for Windows
+      - name: Add exe extname for Windows
         if: matrix.goos == 'windows'
-        run: echo "ASSET_NAME=$GOOS-$GOARCH$GOARM.exe" >> $GITHUB_ENV
+        run: echo "ASSET_EXT_NAME=.exe" >> $GITHUB_ENV
+
+      - name: Rename GOARCH (rename "386" to "i386")
+        if: matrix.goarch == '386'
+        run: echo "ARCH_NAME=i386" >> $GITHUB_ENV
+
+      - name: Rename GOARCH (NOP)
+        if: matrix.goarch != '386'
+        run: echo "ARCH_NAME=${GOARCH}${GOARM}" >> $GITHUB_ENV
+
+      - name: Set asset filename
+        run: echo "ASSET_NAME=slbr_${GOOS}_${ARCH_NAME}${ASSET_EXT_NAME}" >> $GITHUB_ENV
 
       - name: Build binaries
         run: |
           mkdir -p build_assets
-          go build -v -o build_assets/$ASSET_NAME -trimpath
+          go build -v -o build_assets/$ASSET_NAME -trimpath -ldflags="-s -w"
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          prerelease: true
-
-      - name: Upload binary file to release
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./build_assets/$ASSET_NAME
-          asset_name: $ASSET_NAME
-          asset_content_type: application/octet-stream
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file_glob: true
+          file: build_assets/*
+          tag: ${{ github.ref }}
