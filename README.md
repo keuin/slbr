@@ -17,6 +17,10 @@ If you want a Bilibili recorder featured with:
 
 Then you should give SLBR *(suck-less bilibili live recorder)* a try.
 
+## The project name is too offensive!
+
+You can call it *Simple Lightweight Bilibili live Recorder*. It's all up to you.
+
 ## Reference
 
 https://github.com/lovelyyoshino/Bilibili-Live-API
