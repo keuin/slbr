@@ -8,11 +8,118 @@ name: Create Release
 
 jobs:
   build:
+
     name: Create Release
+
+    # START build targets
+    strategy:
+      matrix:
+        # Include amd64 on all platforms.
+        goos: [ windows, freebsd, openbsd, linux, dragonfly, darwin ]
+        goarch: [ amd64, 386 ]
+        exclude:
+          # Exclude i386 on darwin and dragonfly.
+          - goarch: 386
+            goos: dragonfly
+          - goarch: 386
+            goos: darwin
+        include:
+          # BEGIN Linux ARM 5 6 7
+          - goos: linux
+            goarch: arm
+            goarm: 7
+          - goos: linux
+            goarch: arm
+            goarm: 6
+          - goos: linux
+            goarch: arm
+            goarm: 5
+          # END Linux ARM 5 6 7
+          # BEGIN Windows ARM 7
+          - goos: windows
+            goarch: arm
+            goarm: 7
+          # END Windows ARM 7
+          # BEGIN FreeBSD ARM 6 7
+          - goos: freebsd
+            goarch: arm
+            goarm: 6
+          - goos: freebsd
+            goarch: arm
+            goarm: 7
+          # END FreeBSD ARM 6 7
+          # BEGIN OpenBSD ARM 6 7
+          - goos: openbsd
+            goarch: arm
+            goarm: 6
+          - goos: openbsd
+            goarch: arm
+            goarm: 7
+          # END OpenBSD ARM 6 7
+          # BEGIN Other architectures
+          - goos: darwin
+            goarch: arm64
+          - goos: linux
+            goarch: arm64
+          - goos: linux
+            goarch: riscv64
+          - goos: windows
+            goarch: arm64
+          - goos: android
+            goarch: arm64
+          - goos: freebsd
+            goarch: arm64
+          - goos: openbsd
+            goarch: arm64
+          # BEGIN MIPS
+          - goos: linux
+            goarch: mips64
+          - goos: linux
+            goarch: mips64le
+          - goos: linux
+            goarch: mipsle
+          - goos: linux
+            goarch: mips
+          # END MIPS
+          # END Other architectures
+      fail-fast: false
+    # END build targets
+
     runs-on: ubuntu-latest
+
+    env:
+      GOOS: ${{ matrix.goos }}
+      GOARCH: ${{ matrix.goarch }}
+      GOARM: ${{ matrix.goarm }}
+      CGO_ENABLED: 0
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ^1.19
+
+      - name: Get project dependencies
+        run: go mod download
+
+      - name: Set asset filename for non-Windows OSes
+        if: matrix.goos != 'windows'
+        run: echo "ASSET_NAME=$GOOS-$GOARCH$GOARM" >> $GITHUB_ENV
+
+      - name: Set asset filename for Windows
+        if: matrix.goos == 'windows'
+        run: echo "ASSET_NAME=$GOOS-$GOARCH$GOARM.exe" >> $GITHUB_ENV
+
+      - name: Build binaries
+        run: |
+          mkdir -p build_assets
+          go build -v -o build_assets/$ASSET_NAME -trimpath
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -22,3 +129,14 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
           prerelease: true
+
+      - name: Upload binary file to release
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./build_assets/$ASSET_NAME
+          asset_name: $ASSET_NAME
+          asset_content_type: application/octet-stream
