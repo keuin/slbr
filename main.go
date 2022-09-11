@@ -144,7 +144,7 @@ func main() {
 		tasks[i] = recording.NewRunningTask(
 			taskConfigs[i],
 			ctxTasks,
-			func() { wg.Add(1) },
+			func() {},
 			func() { wg.Done() },
 			logging.NewWrappedLogger(logger, fmt.Sprintf("room %v", task.RoomId)),
 		)
@@ -155,9 +155,11 @@ func main() {
 	logger.Printf("Starting tasks...")
 
 	for i := range tasks {
+		wg.Add(1)
 		err := tasks[i].StartTask()
 		if err != nil {
 			logger.Printf("Cannot start task %v (room %v): %v. Skip.", i, tasks[i].RoomId, err)
+			wg.Done()
 		}
 	}
 
