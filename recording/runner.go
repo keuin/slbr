@@ -25,6 +25,7 @@ type TaskResult struct {
 }
 
 const kReadChunkSize = 128 * 1024
+const kSpecialExtName = "partial"
 
 // runTaskWithAutoRestart
 // start a monitor&download task.
@@ -193,12 +194,37 @@ func record(
 	}
 	streamSource := urlInfo.Data.URLs[0]
 
-	fileName := fmt.Sprintf(
-		"%s.%s",
-		GenerateFileName(profile.Data.Title, time.Now()),
-		common.Errorable[string](common.GetFileExtensionFromUrl(streamSource.URL)).OrElse("flv"),
-	)
-	filePath := path.Join(task.Download.SaveDirectory, fileName)
+	var extName string
+
+	// the real extension name (without renaming)
+	originalExtName := common.Errorable[string](common.GetFileExtensionFromUrl(streamSource.URL)).OrElse("flv")
+
+	if task.TaskConfig.Download.UseSpecialExtNameBeforeFinishing {
+		extName = kSpecialExtName
+	} else {
+		extName = originalExtName
+	}
+
+	baseName := GenerateFileName(profile.Data.Title, time.Now())
+	fileName := common.CombineFileName(baseName, extName)
+	saveDir := task.Download.SaveDirectory
+	filePath := path.Join(saveDir, fileName)
+
+	// rename the extension name to originalExtName when finish writing
+	defer func() {
+		if extName == originalExtName {
+			return
+		}
+		from := filePath
+		to := path.Join(saveDir, common.CombineFileName(baseName, originalExtName))
+		err := os.Rename(from, to)
+		if err != nil {
+			task.logger.Error("Cannot rename %v to %v: %v", from, to, err)
+			return
+		}
+		task.logger.Info("Rename file \"%s\" to \"%s\".", from, to)
+	}()
+
 	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 	if err != nil {
 		task.logger.Error("Cannot open file for writing: %v", err)

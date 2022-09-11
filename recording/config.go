@@ -21,8 +21,9 @@ type TransportConfig struct {
 }
 
 type DownloadConfig struct {
-	SaveDirectory        string `mapstructure:"save_directory"`
-	DiskWriteBufferBytes int    `mapstructure:"disk_write_buffer_bytes"`
+	SaveDirectory                    string `mapstructure:"save_directory"`
+	DiskWriteBufferBytes             int    `mapstructure:"disk_write_buffer_bytes"`
+	UseSpecialExtNameBeforeFinishing bool   `mapstructure:"use_special_ext_name_when_downloading"`
 }
 
 type WatchConfig struct {
