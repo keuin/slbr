@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"github.com/keuin/slbr/common"
 	"io"
-	"log"
 	"net"
 	"net/http"
 	"strings"
@@ -32,16 +31,15 @@ func (b Bilibili) newGet(url string) (req *http.Request, err error) {
 
 // callGet make a GET request and parse response as a JSON document with given model.
 func callGet[T BaseResponse[V], V any](b Bilibili, url string) (resp T, err error) {
-	logger := log.Default()
 	req, err := b.newGet(url)
 	if err != nil {
-		logger.Printf("ERROR: Cannot create HTTP request instance on API %v: %v", url, err)
+		b.logger.Error("Cannot create HTTP request instance on API %v: %v", url, err)
 		return
 	}
 
 	r, err := b.Do(req)
 	if err != nil {
-		logger.Printf("ERROR: HTTP Request failed on API %v: %v", url, err)
+		b.logger.Error("HTTP Request failed on API %v: %v", url, err)
 		return
 	}
 	defer func() { _ = r.Body.Close() }()

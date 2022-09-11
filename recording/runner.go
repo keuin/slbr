@@ -122,7 +122,7 @@ func tryRunTask(t *RunningTask) error {
 					}
 					if err2 != nil {
 						// some other unrecoverable error
-						t.logger.Error("Cannot recover from error: %v")
+						t.logger.Error("Cannot recover from error: %v", err2)
 						return err2
 					}
 				}
@@ -297,10 +297,10 @@ func watcherRecoverableLoop(
 			chWatcherDown <- struct{}{}
 			return
 		case ErrTransport:
-			task.logger.Error("ERROR: Watcher stopped due to an I/O error: %v", err)
+			task.logger.Error("Watcher stopped due to an I/O error: %v", err)
 			waitSeconds := task.Transport.RetryIntervalSeconds
 			task.logger.Warning(
-				"WARNING: Sleep for %v second(s) before restarting watcher.\n",
+				"Sleep for %v second(s) before restarting watcher.\n",
 				waitSeconds,
 			)
 			time.Sleep(time.Duration(waitSeconds) * time.Second)
