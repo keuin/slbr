@@ -9,13 +9,16 @@ import (
 	"context"
 	"fmt"
 	"github.com/akamensky/argparse"
+	"github.com/keuin/slbr/bilibili"
 	"github.com/keuin/slbr/common"
 	"github.com/keuin/slbr/logging"
 	"github.com/keuin/slbr/recording"
+	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
 	"log"
 	"os"
 	"os/signal"
+	"reflect"
 	"sync"
 	"syscall"
 )
@@ -104,7 +107,16 @@ func getTasks() (tasks []recording.TaskConfig) {
 			return
 		}
 		var gc GlobalConfig
-		err = viper.Unmarshal(&gc)
+		netType := reflect.TypeOf(bilibili.IP64)
+		err = viper.Unmarshal(&gc, func(conf *mapstructure.DecoderConfig) {
+			conf.DecodeHook = func(from reflect.Value, to reflect.Value) (interface{}, error) {
+				if to.Type() == netType &&
+					bilibili.IpNetType(from.String()).GetDialNetString() == "" {
+					return nil, fmt.Errorf("invalid IpNetType: %v", from.String())
+				}
+				return from.Interface(), nil
+			}
+		})
 		if err != nil {
 			err = fmt.Errorf("cannot parse config file \"%v\": %w", configFile, err)
 			return

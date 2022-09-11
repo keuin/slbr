@@ -2,16 +2,34 @@ package bilibili
 
 import (
 	"context"
+	"fmt"
 	"net"
 )
 
 type IpNetType string
 
 var (
-	IPv6Net IpNetType = "tcp6"
-	IPv4Net IpNetType = "tcp4"
-	IP64    IpNetType = "tcp"
+	IPv6Net IpNetType = "ipv6"
+	IPv4Net IpNetType = "ipv4"
+	IP64    IpNetType = "any"
 )
+
+// GetDialNetString returns the string accepted by net.Dialer::DialContext
+func (t IpNetType) GetDialNetString() string {
+	switch t {
+	case IPv4Net:
+		return "tcp4"
+	case IPv6Net:
+		return "tcp6"
+	case IP64:
+		return "tcp"
+	}
+	return ""
+}
+
+func (t IpNetType) String() string {
+	return fmt.Sprintf("%s(%s)", string(t), t.GetDialNetString())
+}
 
 type netContext = func(context.Context, string, string) (net.Conn, error)
 
@@ -36,6 +54,6 @@ func (p *netProbe) NextNetworkType(dialer net.Dialer) (netContext, IpNetType) {
 	network := p.list[p.i]
 	p.i++
 	return func(ctx context.Context, _, addr string) (net.Conn, error) {
-		return dialer.DialContext(ctx, string(network), addr)
+		return dialer.DialContext(ctx, network.GetDialNetString(), addr)
 	}, network
 }
