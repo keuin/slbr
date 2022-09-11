@@ -109,23 +109,17 @@ func tryRunTask(t *RunningTask) error {
 				// restart recorder if interrupted by I/O errors
 				for !cancelled {
 					cancelled, err2 = record(recorderCtx, bi, t)
-					// live is closed normally, do not restart in current function
-					// the watcher will wait for the next start
-					if errors.Is(err2, bilibili.ErrRoomIsClosed) {
-						t.logger.Info("Live is ended. Stop recording.")
-						return bilibili.ErrRoomIsClosed
-					}
-					if errors.Is(err2, io.EOF) {
-						t.logger.Warning("Live is stopped because of an EOF while reading. " +
-							"This may be caused by a broken connection or a closing live. Retrying...")
+					if errors.Is(err2, io.ErrUnexpectedEOF) {
+						t.logger.Warning("Reading is interrupted because of an unexpected EOF. Retrying...")
 						cancelled = false
 					}
-					if err2 != nil {
-						// some other unrecoverable error
-						t.logger.Error("Cannot recover from error: %v", err2)
-						return err2
-					}
 				}
+				t.logger.Error("Error when copying live stream: %v", err)
+				if err2 == nil || errors.Is(err2, bilibili.ErrRoomIsClosed) || errors.Is(err2, io.EOF) {
+					t.logger.Info("Live is ended. Stop recording.")
+					return bilibili.ErrRoomIsClosed
+				}
+				t.logger.Error("Cannot recover from unexpected error: %v", err2)
 				t.logger.Info("Task is cancelled. Stop recording.")
 			case WatcherLiveStop:
 				// once the live is ended, the watcher will no longer receive live start event
