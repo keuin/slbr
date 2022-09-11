@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"github.com/keuin/slbr/bilibili"
 	"github.com/keuin/slbr/common"
+	"io"
 	"os"
 	"path"
 	"time"
@@ -113,8 +114,14 @@ func tryRunTask(t *RunningTask) error {
 						t.logger.Info("Live is ended. Stop recording.")
 						return bilibili.ErrRoomIsClosed
 					}
+					if errors.Is(err2, io.EOF) {
+						t.logger.Warning("Live is stopped because of an EOF while reading. " +
+							"This may be caused by a broken connection or a closing live. Retrying...")
+						cancelled = false
+					}
 					if err2 != nil {
 						// some other unrecoverable error
+						t.logger.Error("Cannot recover from error: %v")
 						return err2
 					}
 				}
