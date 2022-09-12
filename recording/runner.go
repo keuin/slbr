@@ -37,7 +37,13 @@ func (t *RunningTask) runTaskWithAutoRestart() error {
 	for {
 		t.status = StRunning
 		err := tryRunTask(t)
-		if errors.Is(err, bilibili.ErrRoomIsClosed) {
+		if err == nil ||
+			errors.Is(err, bilibili.ErrRoomIsClosed) ||
+			errors.Is(err, io.EOF) ||
+			errors.Is(err, io.ErrUnexpectedEOF) {
+			if !errors.Is(err, io.EOF) {
+				t.logger.Error("Task stopped because of an error: %v", err)
+			}
 			t.status = StRestarting
 			t.logger.Info("Restarting task...")
 			continue
@@ -93,40 +99,28 @@ func tryRunTask(t *RunningTask) error {
 
 	recorderCtx, stopRecorder := context.WithCancel(t.ctx)
 	defer stopRecorder()
-	for {
-		select {
-		case <-t.ctx.Done():
-			t.logger.Info("Task is stopped.")
-			return nil
-		case <-chWatcherDown:
-			// watcher is down and unrecoverable, stop this task
-			return fmt.Errorf("task (room %v) stopped: watcher is down and unrecoverable", t.RoomId)
-		case ev := <-chWatcherEvent:
-			switch ev {
-			case WatcherLiveStart:
-				cancelled := false
-				var err2 error
-				// restart recorder if interrupted by I/O errors
-				for !cancelled {
-					cancelled, err2 = record(recorderCtx, bi, t)
-					if errors.Is(err2, io.ErrUnexpectedEOF) {
-						t.logger.Warning("Reading is interrupted because of an unexpected EOF. Retrying...")
-						cancelled = false
-					}
-				}
-				t.logger.Error("Error when copying live stream: %v", err2)
-				if err2 == nil || errors.Is(err2, bilibili.ErrRoomIsClosed) || errors.Is(err2, io.EOF) {
-					t.logger.Info("Live is ended. Stop recording.")
-					return bilibili.ErrRoomIsClosed
-				}
-				t.logger.Error("Cannot recover from unexpected error: %v", err2)
-				t.logger.Info("Task is cancelled. Stop recording.")
-			case WatcherLiveStop:
-				// once the live is ended, the watcher will no longer receive live start event
-				// we have to restart the watcher
-				return bilibili.ErrRoomIsClosed
-			}
+
+	ev := <-chWatcherEvent
+	switch ev {
+	case WatcherLiveStart:
+		var err2 error
+		// restart recorder if interrupted by I/O errors
+		_, err2 = record(recorderCtx, bi, t)
+		if errors.Is(err2, io.EOF) {
+			t.logger.Info("The live seems to be closed normally.")
+		} else if errors.Is(err2, io.ErrUnexpectedEOF) {
+			t.logger.Warning("Reading is interrupted because of an unexpected EOF.")
+		} else {
+			t.logger.Error("Error when copying live stream: %v", err2)
 		}
+		t.logger.Info("Stop recording.")
+		return err2
+	case WatcherLiveStop:
+		// once the live is ended, the watcher will no longer receive live start event
+		// we have to restart the watcher
+		return bilibili.ErrRoomIsClosed
+	default:
+		return fmt.Errorf("unknown watcher event: %v", ev)
 	}
 }
 
