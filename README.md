@@ -36,8 +36,8 @@ Then you should give SLBR *(suck-less bilibili live recorder)* a try.
       "transport": {
         // try ipv4 firstly, then ipv6
         "allowed_network_types": [
-          "tcp4",
-          "tcp6"
+          "ipv4",
+          "ipv6"
         ]
       }
     }
