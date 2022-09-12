@@ -204,6 +204,12 @@ func record(
 	saveDir := task.Download.SaveDirectory
 	filePath := path.Join(saveDir, fileName)
 
+	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+	if err != nil {
+		task.logger.Error("Cannot open file for writing: %v", err)
+		cancelled = true
+		return
+	}
 	// rename the extension name to originalExtName when finish writing
 	defer func() {
 		if extName == originalExtName {
@@ -218,13 +224,6 @@ func record(
 		}
 		task.logger.Info("Rename file \"%s\" to \"%s\".", from, to)
 	}()
-
-	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
-	if err != nil {
-		task.logger.Error("Cannot open file for writing: %v", err)
-		cancelled = true
-		return
-	}
 	defer func() { _ = file.Close() }()
 
 	writeBufferSize := task.Download.DiskWriteBufferBytes
