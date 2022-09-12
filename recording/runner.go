@@ -114,7 +114,7 @@ func tryRunTask(t *RunningTask) error {
 						cancelled = false
 					}
 				}
-				t.logger.Error("Error when copying live stream: %v", err)
+				t.logger.Error("Error when copying live stream: %v", err2)
 				if err2 == nil || errors.Is(err2, bilibili.ErrRoomIsClosed) || errors.Is(err2, io.EOF) {
 					t.logger.Info("Live is ended. Stop recording.")
 					return bilibili.ErrRoomIsClosed
