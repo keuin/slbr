@@ -22,7 +22,7 @@ func AutoRetry[T any](
 		ret, err = supplier()
 		if err != nil {
 			if logger != nil {
-				logger.Info("Try %v/%v (sleep %vs): %v",
+				logger.Info("Try %v/%v (sleep %v): %v",
 					i, maxRetryTimes, retryInterval, err)
 			}
 			timer := time.NewTimer(retryInterval)
