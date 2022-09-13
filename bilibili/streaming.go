@@ -42,7 +42,7 @@ func (b Bilibili) CopyLiveStream(
 
 	// 404 when not streaming
 	if resp.StatusCode == http.StatusNotFound {
-		return ErrRoomIsClosed
+		return fmt.Errorf("live is not started or the room does not exist")
 	}
 
 	err = validateHttpStatus(resp)

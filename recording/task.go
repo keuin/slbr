@@ -8,7 +8,9 @@ Concrete task works are done in the `runner.go` file.
 import (
 	"context"
 	"fmt"
+	"github.com/keuin/slbr/common"
 	"github.com/keuin/slbr/logging"
+	"time"
 )
 
 type TaskStatus int
@@ -31,8 +33,6 @@ type RunningTask struct {
 	TaskConfig
 	// ctx: the biggest context this task uses. It may create children contexts.
 	ctx context.Context
-	// result: if the task is ended, here is the returned error
-	result error
 	// status: running status
 	status TaskStatus
 	// hookStarted: called asynchronously when the task is started. This won't be called when restarting.
@@ -70,7 +70,7 @@ func (t *RunningTask) StartTask() error {
 			t.hookStarted()
 			defer t.hookStopped()
 			// do the task
-			_ = t.runTaskWithAutoRestart()
+			t.runTaskWithAutoRestart()
 		}()
 		return nil
 	case StRunning:
@@ -84,4 +84,32 @@ func (t *RunningTask) StartTask() error {
 		return ErrTaskIsStopped
 	}
 	panic(fmt.Errorf("invalid task status: %v", st))
+}
+
+func AutoRetryWithTask[T any](
+	t *RunningTask,
+	supplier func() (T, error),
+) (T, error) {
+	return common.AutoRetry[T](
+		t.ctx,
+		supplier,
+		t.Transport.MaxRetryTimes,
+		time.Duration(t.Transport.RetryIntervalSeconds)*time.Second,
+		&t.logger,
+	)
+}
+
+func AutoRetryWithConfig[T any](
+	ctx context.Context,
+	logger logging.Logger,
+	t *TaskConfig,
+	supplier func() (T, error),
+) (T, error) {
+	return common.AutoRetry[T](
+		ctx,
+		supplier,
+		t.Transport.MaxRetryTimes,
+		time.Duration(t.Transport.RetryIntervalSeconds)*time.Second,
+		&logger,
+	)
 }
