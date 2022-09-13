@@ -38,6 +38,7 @@ func CopyToFileWithBuffer(
 	for {
 		select {
 		case <-ctx.Done():
+			err = ctx.Err()
 			return
 		default:
 			nRead, err = in.Read(buffer[off:Min[int](off+chunkSize, bufSize)])
