@@ -54,7 +54,7 @@ func (b Bilibili) CopyLiveStream(
 
 	b.logger.Info("Copying live stream...")
 	// blocking copy
-	n, err := common.CopyToFileWithBuffer(ctx, out, resp.Body, buffer, readChunkSize, false)
+	n, err := common.CopyToFileWithBuffer(ctx, out, resp.Body, buffer, false, uint(len(buffer)/readChunkSize))
 
 	if err != nil && !errors.Is(err, context.Canceled) {
 		b.logger.Error("Stream copying was interrupted unexpectedly: %v", err)

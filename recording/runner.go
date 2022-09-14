@@ -26,7 +26,7 @@ type TaskResult struct {
 	Error error
 }
 
-const kReadChunkSize = 128 * 1024
+const kReadChunkSize = 1024 * 1024
 const kSpecialExtName = "partial"
 
 var errLiveEnded = NewRecoverableTaskError("live is ended", nil)
