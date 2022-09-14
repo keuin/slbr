@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/keuin/slbr/common"
+	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -16,8 +17,7 @@ func (b Bilibili) CopyLiveStream(
 	roomId common.RoomId,
 	stream StreamingUrlInfo,
 	out *os.File,
-	buffer []byte,
-	readChunkSize int,
+	bufSize int64,
 ) (err error) {
 	url := stream.URL
 	if !strings.HasPrefix(url, "https://") &&
@@ -53,15 +53,30 @@ func (b Bilibili) CopyLiveStream(
 	defer func() { _ = resp.Body.Close() }()
 
 	b.logger.Info("Copying live stream...")
-	// blocking copy
-	n, err := common.CopyToFileWithBuffer(ctx, out, resp.Body, buffer, false, uint(len(buffer)/readChunkSize))
 
-	if err != nil && !errors.Is(err, context.Canceled) {
-		b.logger.Error("Stream copying was interrupted unexpectedly: %v", err)
+	var n int64
+
+	// blocking copy
+copyLoop:
+	for err == nil {
+		select {
+		case <-ctx.Done():
+			// cancelled
+			err = ctx.Err()
+			break copyLoop
+		default:
+			var sz int64
+			sz, err = io.CopyN(out, resp.Body, bufSize)
+			n += sz
+		}
 	}
 
-	if err == nil {
+	if errors.Is(err, context.Canceled) {
+		b.logger.Info("Stop copying...")
+	} else if errors.Is(err, io.EOF) {
 		b.logger.Info("The live is ended. (room %v)", roomId)
+	} else {
+		b.logger.Error("Stream copying was interrupted unexpectedly: %v", err)
 	}
 
 	b.logger.Info("Total downloaded: %v", common.PrettyBytes(uint64(n)))

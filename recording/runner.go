@@ -26,7 +26,6 @@ type TaskResult struct {
 	Error error
 }
 
-const kReadChunkSize = 1024 * 1024
 const kSpecialExtName = "partial"
 
 var errLiveEnded = NewRecoverableTaskError("live is ended", nil)
@@ -310,16 +309,9 @@ func record(
 	defer func() { _ = file.Close() }()
 
 	writeBufferSize := task.Download.DiskWriteBufferBytes
-	if writeBufferSize < kReadChunkSize {
-		writeBufferSize = kReadChunkSize
-	}
-	if mod := writeBufferSize % kReadChunkSize; mod != 0 {
-		writeBufferSize += kReadChunkSize - mod
-	}
-	writeBuffer := make([]byte, writeBufferSize)
 	logger.Info("Write buffer size: %v byte", writeBufferSize)
 	logger.Info("Recording live stream to file \"%v\"...", filePath)
-	err = bi.CopyLiveStream(ctx, task.RoomId, streamSource, file, writeBuffer, kReadChunkSize)
+	err = bi.CopyLiveStream(ctx, task.RoomId, streamSource, file, writeBufferSize)
 	if errors.Is(err, context.Canceled) || err == nil {
 		return err
 	}

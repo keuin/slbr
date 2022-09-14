@@ -23,6 +23,8 @@ import (
 	"syscall"
 )
 
+const defaultDiskBufSize = uint64(1024 * 1024) // 1MiB
+
 var globalConfig *GlobalConfig
 
 func getTasks() (tasks []recording.TaskConfig) {
@@ -67,7 +69,8 @@ func getTasks() (tasks []recording.TaskConfig) {
 		&argparse.Options{
 			Required: false,
 			Help: "Specify disk write buffer size (bytes). " +
-				"The real minimum buffer size is determined by OS",
+				"The real minimum buffer size is determined by OS. " +
+				"Setting this to a large value may make stopping take a long time",
 			Default: 4194304,
 		},
 	)
@@ -129,13 +132,16 @@ func getTasks() (tasks []recording.TaskConfig) {
 	taskCount := len(*rooms)
 	tasks = make([]recording.TaskConfig, taskCount)
 	saveTo := common.Zeroable[string](*saveToPtr).OrElse(".")
-	diskBufSize := *diskBufSizePtr
+	diskBufSize := uint64(*diskBufSizePtr)
+	if *diskBufSizePtr <= 0 {
+		diskBufSize = defaultDiskBufSize
+	}
 	for i := 0; i < taskCount; i++ {
 		tasks[i] = recording.TaskConfig{
 			RoomId:    common.RoomId((*rooms)[i]),
 			Transport: recording.DefaultTransportConfig(),
 			Download: recording.DownloadConfig{
-				DiskWriteBufferBytes: diskBufSize,
+				DiskWriteBufferBytes: int64(diskBufSize),
 				SaveDirectory:        saveTo,
 			},
 		}
