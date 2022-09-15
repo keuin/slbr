@@ -11,12 +11,14 @@ import (
 	"strings"
 )
 
+const kInitReadBytes = 4096 // 4KiB
+
 // CopyLiveStream read data from a livestream video stream, copy them to a writer.
 func (b Bilibili) CopyLiveStream(
 	ctx context.Context,
 	roomId common.RoomId,
 	stream StreamingUrlInfo,
-	out *os.File,
+	fileCreator func() (*os.File, error),
 	bufSize int64,
 ) (err error) {
 	url := stream.URL
@@ -52,7 +54,31 @@ func (b Bilibili) CopyLiveStream(
 
 	defer func() { _ = resp.Body.Close() }()
 
-	b.logger.Info("Copying live stream...")
+	b.logger.Info("Waiting for stream initial bytes...")
+	// read some first bytes to ensure that the live is really started,
+	// so we don't create blank files if the live room is open
+	// but the live hasn't started yet
+	initBytes := make([]byte, kInitReadBytes)
+	_, err = io.ReadFull(resp.Body, initBytes)
+	if err != nil {
+		b.logger.Error("Failed to read stream initial bytes: %v", err)
+		return
+	}
+	b.logger.Info("Stream is started. Receiving live stream...")
+	// write initial bytes
+	var out *os.File
+	out, err = fileCreator()
+	if err != nil {
+		b.logger.Error("Cannot open file for writing: %v", err)
+		err = common.NewUnrecoverableTaskError("failed to create file", err)
+		return
+	}
+	_, err = out.Write(initBytes)
+	if err != nil {
+		b.logger.Error("Failed to write to file: %v", err)
+		return
+	}
+	initBytes = nil // discard that buffer
 
 	var n int64
 

@@ -3,6 +3,7 @@ package recording
 import (
 	"context"
 	"encoding/json"
+	"github.com/keuin/slbr/common"
 	"github.com/keuin/slbr/danmaku"
 	"github.com/keuin/slbr/danmaku/dmmsg"
 	"github.com/keuin/slbr/danmaku/dmpkg"
@@ -50,7 +51,7 @@ func watch(
 	// connect to danmaku server for live online/offline notifications
 	err = dm.Connect(ctx, url)
 	if err != nil {
-		return NewRecoverableTaskError("failed to connect to danmaku server", err)
+		return common.NewRecoverableTaskError("failed to connect to danmaku server", err)
 	}
 	defer func() {
 		// this operation may be time-consuming, so run in another goroutine
@@ -63,7 +64,7 @@ func watch(
 	logger.Info("ws connected. Authenticating...")
 	err = dm.Authenticate(t.RoomId, authKey)
 	if err != nil {
-		return NewUnrecoverableTaskError("authentication failed, invalid protocol", err)
+		return common.NewUnrecoverableTaskError("authentication failed, invalid protocol", err)
 	}
 
 	// the danmaku server requires heartbeat messages every 30 seconds
@@ -75,7 +76,7 @@ func watch(
 	// send initial heartbeat immediately
 	err = heartbeat()
 	if err != nil {
-		return NewRecoverableTaskError("heartbeat failed", err)
+		return common.NewRecoverableTaskError("heartbeat failed", err)
 	}
 
 	// create heartbeat timer
@@ -85,7 +86,7 @@ func watch(
 	logger.Info("Checking initial live status...")
 	isLiving, err := AutoRetryWithConfig[bool](ctx, logger, &t, liveStatusChecker)
 	if err != nil {
-		return NewRecoverableTaskError("check initial live status failed", err)
+		return common.NewRecoverableTaskError("check initial live status failed", err)
 	}
 	if isLiving {
 		logger.Info("The live is already started. Start recording immediately.")
@@ -101,18 +102,18 @@ func watch(
 		case <-heartBeatTimer.C:
 			err = heartbeat()
 			if err != nil {
-				return NewRecoverableTaskError("heartbeat failed", err)
+				return common.NewRecoverableTaskError("heartbeat failed", err)
 			}
 		default:
 			var msg dmpkg.DanmakuExchange
 			msg, err = dm.ReadExchange()
 			if err != nil {
-				return NewRecoverableTaskError("failed to read exchange from server", err)
+				return common.NewRecoverableTaskError("failed to read exchange from server", err)
 			}
 			// the exchange may be compressed
 			msg, err = msg.Inflate()
 			if err != nil {
-				return NewUnrecoverableTaskError("failed to decompress server message", err)
+				return common.NewUnrecoverableTaskError("failed to decompress server message", err)
 			}
 
 			switch msg.Operation {
@@ -122,7 +123,7 @@ func watch(
 				err := json.Unmarshal(msg.Body, &info)
 				if err != nil {
 					logger.Error("Invalid JSON: \"%v\", exchange: %v", string(msg.Body), msg)
-					return NewUnrecoverableTaskError("invalid JSON response from server", err)
+					return common.NewUnrecoverableTaskError("invalid JSON response from server", err)
 				}
 				switch info.Command {
 				case CommandLiveStart:
