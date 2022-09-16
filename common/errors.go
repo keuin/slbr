@@ -42,6 +42,10 @@ func (e *RecoverableTaskError) Error() string {
 	return fmt.Sprintf("%v: %v", e.message, e.err)
 }
 
+func (e *RecoverableTaskError) Unwrap() error {
+	return e.err
+}
+
 func NewRecoverableTaskError(message string, err error) error {
 	return &RecoverableTaskError{message: message, err: err}
 }
@@ -53,6 +57,10 @@ type UnrecoverableTaskError struct {
 
 func (e *UnrecoverableTaskError) Error() string {
 	return fmt.Sprintf("%v: %v", e.message, e.err)
+}
+
+func (e *UnrecoverableTaskError) Unwrap() error {
+	return e.err
 }
 
 func NewUnrecoverableTaskError(message string, err error) error {

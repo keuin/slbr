@@ -40,7 +40,11 @@ func (t *RunningTask) runTaskWithAutoRestart() {
 	t.status = StRunning
 loop:
 	for {
-		switch err := tryRunTask(t); err.(type) {
+		err := tryRunTask(t)
+		if errors.Is(err, context.Canceled) {
+			break
+		}
+		switch err.(type) {
 		case nil:
 			t.logger.Info("Task stopped: %v", t.String())
 		case *common.RecoverableTaskError:
@@ -49,9 +53,7 @@ loop:
 			}
 			t.status = StRestarting
 		default:
-			if !errors.Is(err, context.Canceled) {
-				t.logger.Error("Cannot recover from error: %v", err)
-			}
+			t.logger.Error("Cannot recover from error: %v", err)
 			break loop
 		}
 	}
@@ -123,6 +125,10 @@ func tryRunTask(t *RunningTask) error {
 				liveStatusChecker,
 				t.logger,
 			)
+			// the context is cancelled
+			if errors.Is(err, context.Canceled) {
+				break loop
+			}
 			switch err.(type) {
 			case nil:
 				// live is started, stop watcher loop and start the recorder
@@ -139,10 +145,6 @@ func tryRunTask(t *RunningTask) error {
 				t.logger.Error("Error occurred in live status watcher: %v", err)
 			default:
 				run = false
-				// the task is being cancelled
-				if errors.Is(err, context.Canceled) {
-					break loop
-				}
 				// unknown error type, this should not happen
 				t.logger.Error("Unexpected type of error in watcher: %v", err)
 			}
