@@ -119,6 +119,9 @@ func tryRunTask(t *RunningTask) error {
 		var err error
 		defer wg.Done()
 		run := true
+		cd := common.CoolDown{
+			MinInterval: time.Second * 10,
+		}
 	loop:
 		for run {
 			err = watch(
@@ -156,6 +159,7 @@ func tryRunTask(t *RunningTask) error {
 			}
 			if run {
 				t.logger.Info("Restarting watcher...")
+				cd.Tick()
 			} else {
 				t.logger.Error("Cannot restart watcher to recover from that error.")
 			}
