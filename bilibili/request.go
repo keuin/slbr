@@ -2,7 +2,6 @@ package bilibili
 
 import (
 	"encoding/json"
-	"github.com/keuin/slbr/common"
 	"io"
 	"net"
 	"net/http"
@@ -77,9 +76,8 @@ func (b Bilibili) Do(req *http.Request) (resp *http.Response, err error) {
 		transport.DialContext = netCtx
 		b.http.Transport = transport
 		resp, err = b.http.Do(req)
-
-		isOpErr := common.IsErrorOfType(err, &net.OpError{})
-		isAddrErr := common.IsErrorOfType(err, &net.AddrError{})
+		_, isOpErr := err.(*net.OpError)
+		_, isAddrErr := err.(*net.AddrError)
 		if err == nil || !isOpErr || !isAddrErr {
 			// return the first success request
 			b.logger.Info("Request success with network %v.", typeName)

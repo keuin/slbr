@@ -323,7 +323,7 @@ func record(
 		logger.Info("Recording live stream to file \"%v\"...", filePath)
 		return
 	}, writeBufferSize)
-	if common.IsErrorOfType(err, &common.UnrecoverableTaskError{}) {
+	if _, ok := err.(*common.UnrecoverableTaskError); ok {
 		logger.Error("Cannot record: %v", err)
 		return err
 	} else if errors.Is(err, context.Canceled) || err == nil {
