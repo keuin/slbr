@@ -1,4 +1,4 @@
-package common
+package myurl
 
 import "testing"
 
@@ -12,15 +12,15 @@ func TestGetFileExtensionFromUrl(t *testing.T) {
 		{Expected: "flv"},
 	}
 	var err error
-	tests[0].Actual, err = GetFileExtensionFromUrl("http://www.example.com/index.html")
+	tests[0].Actual, err = Url("http://www.example.com/index.html").FileExtension()
 	if err != nil {
 		t.Fatalf("GetFileExtensionFromUrl: %v", err)
 	}
-	tests[1].Actual, err = GetFileExtensionFromUrl("https://www.example.com/index.htm")
+	tests[1].Actual, err = Url("https://www.example.com/index.htm").FileExtension()
 	if err != nil {
 		t.Fatalf("GetFileExtensionFromUrl: %v", err)
 	}
-	tests[2].Actual, err = GetFileExtensionFromUrl("https://www.example.com/video.flv?a=1&b=2flv")
+	tests[2].Actual, err = Url("https://www.example.com/video.flv?a=1&b=2flv").FileExtension()
 	if err != nil {
 		t.Fatalf("GetFileExtensionFromUrl: %v", err)
 	}

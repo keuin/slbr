@@ -1,4 +1,4 @@
-package common
+package myurl
 
 import (
 	"errors"
@@ -6,10 +6,16 @@ import (
 	"strings"
 )
 
-// GetFileExtensionFromUrl
+type Url string
+
+func (o Url) Url() string {
+	return string(o)
+}
+
+// FileExtension returns file extension of file name from this url.
 // copied from https://elisegev.medium.com/get-a-file-extension-from-a-url-in-golang-5061d4a298a
-func GetFileExtensionFromUrl(rawUrl string) (string, error) {
-	u, err := url.Parse(rawUrl)
+func (o Url) FileExtension() (string, error) {
+	u, err := url.Parse(o.Url())
 	if err != nil {
 		return "", err
 	}
