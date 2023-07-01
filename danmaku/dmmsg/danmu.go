@@ -23,11 +23,11 @@ func (dm DanMuMessage) String() string {
 		dm.SourceUser.Nickname, dm.SourceUser.UID, dm.Content)
 }
 
-const kInvalidDanmakuJson = "invalid danmaku JSON document"
+const InvalidDanmakuJson = "invalid danmaku JSON document"
 
 func ParseDanmakuMessage(body RawDanMuMessage) (dmm DanMuMessage, err error) {
 	if len(body.Info) != 16 {
-		err = fmt.Errorf("%s: \"info\" length != 16", kInvalidDanmakuJson)
+		err = fmt.Errorf("%s: \"info\" length != 16", InvalidDanmakuJson)
 		return
 	}
 
@@ -41,14 +41,14 @@ func ParseDanmakuMessage(body RawDanMuMessage) (dmm DanMuMessage, err error) {
 	var ok bool
 	uid, ok := userInfo[0].(float64)
 	if !ok {
-		err = fmt.Errorf("%s: uid is not a float64: %v", kInvalidDanmakuJson, userInfo[0])
+		err = fmt.Errorf("%s: uid is not a float64: %v", InvalidDanmakuJson, userInfo[0])
 		return
 	}
 	dmm.SourceUser.UID = int64(uid)
 
 	dmm.SourceUser.Nickname, ok = userInfo[1].(string)
 	if !ok {
-		err = fmt.Errorf("%s: nickname is not a string: %v", kInvalidDanmakuJson, userInfo[1])
+		err = fmt.Errorf("%s: nickname is not a string: %v", InvalidDanmakuJson, userInfo[1])
 		return
 	}
 	return

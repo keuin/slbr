@@ -31,8 +31,10 @@ func (e *DanmakuExchange) String() string {
 		e.Length, e.ProtocolVer, e.Operation, e.Body)
 }
 
-const kHeaderLength = 16
-const kSequenceId = 1
+const (
+	HeaderLength = 16
+	SequenceId   = 1
+)
 
 type ProtocolVer uint16
 
@@ -47,9 +49,12 @@ const (
 	ProtoBrotli ProtocolVer = 3
 )
 
-const kUidGuest = 0
-const kPlatformWeb = "web"
-const kAuthTypeDefault = 2 // magic number, not sure what does it mean
+const (
+	UidGuest    = 0
+	PlatformWeb = "web"
+	// AuthTypeDefault magic number, not sure what does it mean
+	AuthTypeDefault = 2
+)
 
 func (e *DanmakuExchange) Marshal() (data []byte, err error) {
 	var buffer bytes.Buffer

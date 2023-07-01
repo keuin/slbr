@@ -15,8 +15,8 @@ import (
 	"nhooyr.io/websocket"
 )
 
-// Bilibili uses only binary WebSocket messages
-const kBilibiliWebSocketMessageType = websocket.MessageBinary
+// BilibiliWebSocketMessageType Bilibili uses only binary WebSocket messages
+const BilibiliWebSocketMessageType = websocket.MessageBinary
 
 type DanmakuClient struct {
 	ws   *websocket.Conn
@@ -34,7 +34,7 @@ type wsDatagramIO struct {
 }
 
 func (w *wsDatagramIO) Consume(data []byte) error {
-	return w.ws.Write(w.ctx, kBilibiliWebSocketMessageType, data)
+	return w.ws.Write(w.ctx, BilibiliWebSocketMessageType, data)
 }
 
 func (w *wsDatagramIO) Get() (data []byte, err error) {
@@ -42,7 +42,7 @@ func (w *wsDatagramIO) Get() (data []byte, err error) {
 	if err != nil {
 		return
 	}
-	if typ != kBilibiliWebSocketMessageType {
+	if typ != BilibiliWebSocketMessageType {
 		err = fmt.Errorf("invalid message type: expected a binary WebSocket message, however got %v", typ.String())
 	}
 	return

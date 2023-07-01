@@ -28,7 +28,7 @@ type TaskResult struct {
 	Error error
 }
 
-const kSpecialExtName = "partial"
+const SpecialExtName = "partial"
 
 var errLiveEnded = common.NewRecoverableTaskError("live is ended", nil)
 
@@ -281,7 +281,7 @@ func record(
 	originalExtName := mo.TupleToResult(myurl.Url(streamSource.URL).FileExtension()).OrElse("flv")
 
 	if task.Download.UseSpecialExtNameBeforeFinishing {
-		extName = kSpecialExtName
+		extName = SpecialExtName
 	} else {
 		extName = originalExtName
 	}

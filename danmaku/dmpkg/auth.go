@@ -23,11 +23,11 @@ type authInfo struct {
 // NewAuth creates a new authentication exchange.
 func NewAuth(protocol ProtocolVer, roomId common.RoomId, authKey string) (exc DanmakuExchange) {
 	exc, _ = NewPlainExchange(OpConnect, authInfo{
-		UID:      kUidGuest,
+		UID:      UidGuest,
 		RoomId:   uint64(roomId),
 		ProtoVer: int(protocol),
-		Platform: kPlatformWeb,
-		Type:     kAuthTypeDefault,
+		Platform: PlatformWeb,
+		Type:     AuthTypeDefault,
 		Key:      authKey,
 	})
 	return

@@ -7,14 +7,14 @@ import (
 )
 
 func DecodeExchange(data []byte) (exc DanmakuExchange, err error) {
-	if ln := len(data); ln < kHeaderLength {
-		err = fmt.Errorf("incomplete datagram: length = %v < %v", ln, kHeaderLength)
+	if ln := len(data); ln < HeaderLength {
+		err = fmt.Errorf("incomplete datagram: length = %v < %v", ln, HeaderLength)
 		return
 	}
 
 	// unpack header
 	var exchangeHeader DanmakuExchangeHeader
-	err = struc.Unpack(bytes.NewReader(data[:kHeaderLength]), &exchangeHeader)
+	err = struc.Unpack(bytes.NewReader(data[:HeaderLength]), &exchangeHeader)
 	if err != nil {
 		err = fmt.Errorf("cannot unpack exchange header: %w", err)
 		return
@@ -22,9 +22,9 @@ func DecodeExchange(data []byte) (exc DanmakuExchange, err error) {
 	headerLength := exchangeHeader.HeaderLength
 
 	// validate header length, fail fast if not match
-	if headerLength != kHeaderLength {
+	if headerLength != HeaderLength {
 		err = fmt.Errorf("invalid header length, "+
-			"the protocol implementation might be obsolete: %v != %v", headerLength, kHeaderLength)
+			"the protocol implementation might be obsolete: %v != %v", headerLength, HeaderLength)
 		return
 	}
 

@@ -6,7 +6,7 @@ import (
 	"math"
 )
 
-const kMaxBodyLength = math.MaxUint32 - uint64(kHeaderLength)
+const MaxBodyLength = math.MaxUint32 - uint64(HeaderLength)
 
 // NewPlainExchange creates a new exchange with raw body specified.
 // body: a struct or a raw string
@@ -28,18 +28,18 @@ func NewPlainExchange(operation Operation, body interface{}) (exc DanmakuExchang
 		}
 	}
 
-	length := uint64(kHeaderLength + len(bodyData))
-	if length > kMaxBodyLength {
-		err = fmt.Errorf("body is too large (> %d)", kMaxBodyLength)
+	length := uint64(HeaderLength + len(bodyData))
+	if length > MaxBodyLength {
+		err = fmt.Errorf("body is too large (> %d)", MaxBodyLength)
 		return
 	}
 	exc = DanmakuExchange{
 		DanmakuExchangeHeader: DanmakuExchangeHeader{
 			Length:       uint32(length),
-			HeaderLength: kHeaderLength,
+			HeaderLength: HeaderLength,
 			ProtocolVer:  ProtoPlainJson,
 			Operation:    operation,
-			SequenceId:   kSequenceId,
+			SequenceId:   SequenceId,
 		},
 		Body: bodyData,
 	}

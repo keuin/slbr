@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-const kInitReadBytes = 4096 // 4KiB
+const InitReadBytes = 4096 // 4KiB
 
 // CopyLiveStream read data from a livestream video stream, copy them to a writer.
 func (b Bilibili) CopyLiveStream(
@@ -58,7 +58,7 @@ func (b Bilibili) CopyLiveStream(
 	// read some first bytes to ensure that the live is really started,
 	// so we don't create blank files if the live room is open
 	// but the live hasn't started yet
-	initBytes := make([]byte, kInitReadBytes)
+	initBytes := make([]byte, InitReadBytes)
 	_, err = io.ReadFull(resp.Body, initBytes)
 	if err != nil {
 		b.logger.Error("Failed to read stream initial bytes: %v", err)
