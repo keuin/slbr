@@ -13,6 +13,7 @@ import (
 	"github.com/keuin/slbr/bilibili"
 	"github.com/keuin/slbr/common"
 	"github.com/keuin/slbr/logging"
+	"github.com/samber/mo"
 	"io"
 	"os"
 	"path"
@@ -276,7 +277,7 @@ func record(
 	var extName string
 
 	// the real extension name (without renaming)
-	originalExtName := common.Errorable[string](common.GetFileExtensionFromUrl(streamSource.URL)).OrElse("flv")
+	originalExtName := mo.TupleToResult(common.GetFileExtensionFromUrl(streamSource.URL)).OrElse("flv")
 
 	if task.Download.UseSpecialExtNameBeforeFinishing {
 		extName = kSpecialExtName

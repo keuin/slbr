@@ -14,6 +14,7 @@ import (
 	"github.com/keuin/slbr/logging"
 	"github.com/keuin/slbr/recording"
 	"github.com/mitchellh/mapstructure"
+	"github.com/samber/mo"
 	"github.com/spf13/viper"
 	"log"
 	"os"
@@ -131,7 +132,7 @@ func getTasks() (tasks []recording.TaskConfig) {
 	// generate task list from cli
 	taskCount := len(*rooms)
 	tasks = make([]recording.TaskConfig, taskCount)
-	saveTo := common.Zeroable[string](*saveToPtr).OrElse(".")
+	saveTo := mo.EmptyableToOption(*saveToPtr).OrElse(".")
 	diskBufSize := uint64(*diskBufSizePtr)
 	if *diskBufSizePtr <= 0 {
 		diskBufSize = defaultDiskBufSize
