@@ -11,7 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/keuin/slbr/bilibili"
-	errors2 "github.com/keuin/slbr/bilibili/errors"
+	errs "github.com/keuin/slbr/bilibili/errors"
 	"github.com/keuin/slbr/common"
 	"github.com/keuin/slbr/common/myurl"
 	"github.com/keuin/slbr/logging"
@@ -31,7 +31,7 @@ type TaskResult struct {
 
 const SpecialExtName = "partial"
 
-var errLiveEnded = errors2.NewRecoverableTaskError("live is ended", nil)
+var errLiveEnded = errs.NewError(errs.LiveEnded)
 
 // runTaskWithAutoRestart
 // start a monitor&download task.
@@ -50,8 +50,8 @@ loop:
 		switch err.(type) {
 		case nil:
 			t.logger.Info("Task stopped: %v", t.String())
-		case *errors2.RecoverableTaskError:
-			if err != errLiveEnded {
+		case errs.TaskError:
+			if !errors.Is(err, errLiveEnded) {
 				t.logger.Error("Temporary error: %v", err)
 			}
 			t.status = StRestarting
@@ -87,7 +87,7 @@ func tryRunTask(t *RunningTask) error {
 		},
 	)
 	if err != nil {
-		return errors2.NewRecoverableTaskError("cannot get notification server info", err)
+		return errs.NewError(errs.GetDanmakuServerInfo, err)
 	}
 
 	t.logger.Info("Success.")
@@ -132,20 +132,22 @@ func tryRunTask(t *RunningTask) error {
 			if errors.Is(err, context.Canceled) {
 				break loop
 			}
-			switch err.(type) {
+			switch err := err.(type) {
 			case nil:
 				// live is started, stop watcher loop and start the recorder
 				break loop
-			case *errors2.RecoverableTaskError:
-				// if the watcher fails and recoverable, just try to recover
-				// because the recorder has not started yet
-				run = true
-				t.logger.Error("Error occurred in live status watcher: %v", err)
+			case errs.TaskError:
+				if err.IsRecoverable() {
+					// if the watcher fails and recoverable, just try to recover
+					// because the recorder has not started yet
+					run = true
+					t.logger.Error("Error occurred in live status watcher: %v", err)
+				} else {
+					// the watcher cannot recover, so the task should be stopped
+					run = false
+					t.logger.Error("Error occurred in live status watcher: %v", err)
+				}
 				break
-			case *errors2.UnrecoverableTaskError:
-				// the watcher cannot recover, so the task should be stopped
-				run = false
-				t.logger.Error("Error occurred in live status watcher: %v", err)
 			default:
 				run = false
 				// unknown error type, this should not happen
@@ -161,7 +163,7 @@ func tryRunTask(t *RunningTask) error {
 	}()
 
 	// wait for live start signal or the watcher stops abnormally
-	switch errWatcher := <-chWatcherError; errWatcher.(type) {
+	switch errWatcher := <-chWatcherError; err := errWatcher.(type) {
 	case nil:
 		// live is started, start recording
 		// (now the watcher should have stopped)
@@ -170,20 +172,18 @@ func tryRunTask(t *RunningTask) error {
 			run := true
 			for run {
 				err = record(t.ctx, bi, &t.TaskConfig, t.logger)
-				switch err.(type) {
-				case nil:
+				if err == nil {
 					// live is ended
 					t.logger.Info("The live is ended. Restarting current task...")
 					return errLiveEnded
-				case *errors2.RecoverableTaskError:
+				}
+				if err, ok := err.(errs.TaskError); ok && err.IsRecoverable() {
+					run = true
 					// here we don't know if the live is ended, so we have to do a check
 					t.logger.Warning("Recording is interrupted. Checking live status...")
 					isLiving, err2 := AutoRetryWithTask(t, liveStatusChecker)
 					if err2 != nil {
-						return errors2.NewRecoverableTaskError(
-							"when handling an error, another error occurred",
-							fmt.Errorf("first: %v, second: %w", err, err2),
-						)
+						return errs.NewError(errs.RecoverLiveStatusChecker, err, err2)
 					}
 					if isLiving {
 						t.logger.Info("This is a temporary error. Restarting recording...")
@@ -192,33 +192,43 @@ func tryRunTask(t *RunningTask) error {
 						return errLiveEnded
 					}
 					run = isLiving
-					break
-				default:
-					run = false
-					if errors.Is(err, context.Canceled) {
-						t.logger.Info("Recorder is stopped.")
-					} else if errors.Is(err, io.EOF) {
-						t.logger.Info("The live seems to be closed normally.")
-					} else if errors.Is(err, io.ErrUnexpectedEOF) {
-						t.logger.Warning("Reading is interrupted because of an unexpected EOF.")
-					} else {
-						t.logger.Error("Error when copying live stream: %v", err)
-					}
-					t.logger.Info("Stop recording.")
 				}
+				// unrecoverable or unexpected errors
+				run = false
+				if errors.Is(err, context.Canceled) {
+					t.logger.Info("Recorder is stopped.")
+				} else if errors.Is(err, io.EOF) {
+					t.logger.Info("The live seems to be closed normally.")
+				} else if errors.Is(err, io.ErrUnexpectedEOF) {
+					t.logger.Warning("Reading is interrupted because of an unexpected EOF.")
+				} else {
+					t.logger.Error("Error when copying live stream: %v", err)
+				}
+				t.logger.Info("Stop recording.")
 			}
 			return err
 		}()
-	case *errors2.UnrecoverableTaskError:
-		// watcher is stopped and cannot restart
-		return errors2.NewUnrecoverableTaskError("failed to watch live status", errWatcher)
+	case errs.TaskError:
+		if !err.IsRecoverable() {
+			// watcher is stopped and cannot restart
+			return errs.NewError(errs.LiveStatusWatch, errWatcher)
+		}
+		// this shouldn't happen
+		// TODO this code looks error-prone, we need to refactor the entire error handling routine,
+		// now we just try to keep the logic close to what it looks like before refactoring
+		// watcher is cancelled, stop running the task
+		if errors.Is(errWatcher, context.Canceled) {
+			return errWatcher
+		}
+		// unexpected error, this is a programming error
+		return errs.NewError(errs.Unknown, errWatcher)
 	default:
 		// watcher is cancelled, stop running the task
 		if errors.Is(errWatcher, context.Canceled) {
 			return errWatcher
 		}
 		// unexpected error, this is a programming error
-		return errors2.NewUnrecoverableTaskError("unexpected error type", errWatcher)
+		return errs.NewError(errs.Unknown, errWatcher)
 	}
 }
 
@@ -248,7 +258,7 @@ func record(
 		if errors.Is(err, context.Canceled) {
 			return err
 		}
-		return errors2.NewRecoverableTaskError("failed to get living room information", err)
+		return errs.NewError(errs.GetRoomInfo, err)
 	}
 
 	logger.Info("Getting stream url...")
@@ -264,7 +274,7 @@ func record(
 		if errors.Is(err, context.Canceled) {
 			return err
 		}
-		return errors2.NewRecoverableTaskError("failed to get live info", err)
+		return errs.NewError(errs.GetLiveInfo, err)
 	}
 	if len(urlInfo.Data.URLs) == 0 {
 		j, err2 := json.Marshal(urlInfo)
@@ -272,7 +282,7 @@ func record(
 			j = []byte("(not available)")
 		}
 		logger.Error("No stream was provided. Response: %v", string(j))
-		return errors2.NewUnrecoverableTaskError("invalid live info", fmt.Errorf("no stream provided"))
+		return errs.NewError(errs.InvalidLiveInfo, fmt.Errorf("no stream provided"))
 	}
 	streamSource := urlInfo.Data.URLs[0]
 
@@ -325,14 +335,14 @@ func record(
 		logger.Info("Recording live stream to file \"%v\"...", filePath)
 		return
 	}, writeBufferSize)
-	if _, ok := err.(*errors2.UnrecoverableTaskError); ok {
+	if err, ok := err.(errs.TaskError); ok && !err.IsRecoverable() {
 		logger.Error("Cannot record: %v", err)
 		return err
 	} else if errors.Is(err, context.Canceled) || err == nil {
 		return err
 	}
 	logger.Error("Error when copying live stream: %v", err)
-	return errors2.NewRecoverableTaskError("stream copy was unexpectedly interrupted", err)
+	return errs.NewError(errs.StreamCopy, err)
 }
 
 func getDanmakuServer(
