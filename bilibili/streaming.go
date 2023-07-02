@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	errors2 "github.com/keuin/slbr/bilibili/errors"
 	"github.com/keuin/slbr/common"
 	"io"
 	"net/http"
@@ -70,7 +71,7 @@ func (b Bilibili) CopyLiveStream(
 	out, err = fileCreator()
 	if err != nil {
 		b.logger.Error("Cannot open file for writing: %v", err)
-		err = common.NewUnrecoverableTaskError("failed to create file", err)
+		err = errors2.NewUnrecoverableTaskError("failed to create file", err)
 		return
 	}
 	_, err = out.Write(initBytes)
