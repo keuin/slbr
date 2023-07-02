@@ -1,8 +1,9 @@
-package common
+package testing
 
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/keuin/slbr/bilibili"
 	"io"
 	"net/http"
 )
@@ -18,11 +19,11 @@ type LiveList struct {
 	Data    struct {
 		Count int `json:"count"`
 		Data  []struct {
-			Face     string `json:"face"`
-			Link     string `json:"link"`
-			Roomid   int    `json:"roomid"`
-			Roomname string `json:"roomname"`
-			Nickname string `json:"nickname"`
+			Face     string          `json:"face"`
+			Link     string          `json:"link"`
+			Roomid   bilibili.RoomId `json:"roomid"`
+			Roomname string          `json:"roomname"`
+			Nickname string          `json:"nickname"`
 		} `json:"data"`
 	} `json:"data"`
 }

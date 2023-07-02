@@ -16,7 +16,7 @@ const InitReadBytes = 4096 // 4KiB
 // CopyLiveStream read data from a livestream video stream, copy them to a writer.
 func (b Bilibili) CopyLiveStream(
 	ctx context.Context,
-	roomId common.RoomId,
+	roomId RoomId,
 	stream StreamingUrlInfo,
 	fileCreator func() (*os.File, error),
 	bufSize int64,

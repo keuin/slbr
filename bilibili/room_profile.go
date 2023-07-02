@@ -2,12 +2,11 @@ package bilibili
 
 import (
 	"fmt"
-	"github.com/keuin/slbr/common"
 )
 
 type roomProfile struct {
 	UID              int      `json:"uid"`
-	RoomID           int      `json:"room_id"`
+	RoomID           RoomId   `json:"room_id"`
 	ShortID          int      `json:"short_id"`
 	Attention        int      `json:"attention"`
 	Online           int      `json:"online"`
@@ -80,7 +79,9 @@ type roomProfile struct {
 
 type RoomProfileResponse = BaseResponse[roomProfile]
 
-func (b Bilibili) GetRoomProfile(roomId common.RoomId) (resp RoomProfileResponse, err error) {
+func (b Bilibili) GetRoomProfile(roomId RoomId) (resp RoomProfileResponse, err error) {
 	url := fmt.Sprintf("https://api.live.bilibili.com/room/v1/Room/get_info?room_id=%d", roomId)
 	return callGet[RoomProfileResponse](b, url)
 }
+
+type RoomId uint64

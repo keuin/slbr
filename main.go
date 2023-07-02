@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"github.com/akamensky/argparse"
 	"github.com/keuin/slbr/bilibili"
-	"github.com/keuin/slbr/common"
 	"github.com/keuin/slbr/logging"
 	"github.com/keuin/slbr/recording"
 	"github.com/mitchellh/mapstructure"
@@ -139,7 +138,7 @@ func getTasks() (tasks []recording.TaskConfig) {
 	}
 	for i := 0; i < taskCount; i++ {
 		tasks[i] = recording.TaskConfig{
-			RoomId:    common.RoomId((*rooms)[i]),
+			RoomId:    bilibili.RoomId((*rooms)[i]),
 			Transport: recording.DefaultTransportConfig(),
 			Download: recording.DownloadConfig{
 				DiskWriteBufferBytes: int64(diskBufSize),

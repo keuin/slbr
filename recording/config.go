@@ -3,11 +3,10 @@ package recording
 import (
 	"fmt"
 	"github.com/keuin/slbr/bilibili"
-	"github.com/keuin/slbr/common"
 )
 
 type TaskConfig struct {
-	RoomId    common.RoomId   `mapstructure:"room_id"`
+	RoomId    bilibili.RoomId `mapstructure:"room_id"`
 	Transport TransportConfig `mapstructure:"transport"`
 	Download  DownloadConfig  `mapstructure:"download"`
 	Watch     WatchConfig     `mapstructure:"watch"`

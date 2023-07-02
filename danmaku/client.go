@@ -9,7 +9,7 @@ package danmaku
 import (
 	"context"
 	"fmt"
-	"github.com/keuin/slbr/common"
+	"github.com/keuin/slbr/bilibili"
 	"github.com/keuin/slbr/danmaku/dmpkg"
 
 	"nhooyr.io/websocket"
@@ -87,7 +87,7 @@ func (d *DanmakuClient) Disconnect() error {
 	return ws.Close(websocket.StatusInternalError, "disconnected")
 }
 
-func (d *DanmakuClient) Authenticate(roomId common.RoomId, authKey string) error {
+func (d *DanmakuClient) Authenticate(roomId bilibili.RoomId, authKey string) error {
 	pkg := dmpkg.NewAuth(dmpkg.ProtoPlainJson, roomId, authKey)
 	data, err := pkg.Marshal()
 	if err != nil {

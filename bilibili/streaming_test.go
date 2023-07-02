@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/keuin/slbr/common"
+	testing2 "github.com/keuin/slbr/common/testing"
 	"github.com/keuin/slbr/logging"
 	"log"
 	"os"
@@ -13,7 +13,7 @@ import (
 
 func TestBilibili_CopyLiveStream(t *testing.T) {
 	// get an online live room for testing
-	liveList, err := common.GetLiveListForGuestUser()
+	liveList, err := testing2.GetLiveListForGuestUser()
 	if err != nil {
 		t.Fatalf("cannot get live list for testing: %v", err)
 	}
@@ -21,7 +21,7 @@ func TestBilibili_CopyLiveStream(t *testing.T) {
 	if len(lives) <= 0 {
 		t.Fatalf("no live for guest available")
 	}
-	roomId := common.RoomId(lives[0].Roomid)
+	roomId := lives[0].Roomid
 
 	logger := log.Default()
 	bi := NewBilibili(logging.NewWrappedLogger(logger, "test-logger"))

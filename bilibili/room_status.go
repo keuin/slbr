@@ -6,7 +6,6 @@ package bilibili
 
 import (
 	"fmt"
-	"github.com/keuin/slbr/common"
 )
 
 type LiveStatus int
@@ -51,7 +50,7 @@ func (s LiveStatus) String() string {
 	return liveStatusStringMap[s]
 }
 
-func (b Bilibili) GetRoomPlayInfo(roomId common.RoomId) (resp RoomPlayInfoResponse, err error) {
+func (b Bilibili) GetRoomPlayInfo(roomId RoomId) (resp RoomPlayInfoResponse, err error) {
 	url := fmt.Sprintf("https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo"+
 		"?room_id=%d&protocol=0,1&format=0,1,2&codec=0,1&qn=0&platform=web&ptype=8&dolby=5&panorama=1", roomId)
 	return callGet[RoomPlayInfoResponse](b, url)
