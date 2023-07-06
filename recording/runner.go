@@ -12,7 +12,7 @@ import (
 	"fmt"
 	"github.com/keuin/slbr/bilibili"
 	errs "github.com/keuin/slbr/bilibili/errors"
-	"github.com/keuin/slbr/common"
+	"github.com/keuin/slbr/common/files"
 	"github.com/keuin/slbr/common/myurl"
 	"github.com/keuin/slbr/logging"
 	"github.com/samber/mo"
@@ -298,7 +298,7 @@ func record(
 	}
 
 	baseName := GenerateFileName(profile.Data.Title, time.Now())
-	fileName := common.CombineFileName(baseName, extName)
+	fileName := files.CombineFileName(baseName, extName)
 	saveDir := task.Download.SaveDirectory
 	filePath := path.Join(saveDir, fileName)
 
@@ -315,7 +315,7 @@ func record(
 			return
 		}
 		from := filePath
-		to := path.Join(saveDir, common.CombineFileName(baseName, originalExtName))
+		to := path.Join(saveDir, files.CombineFileName(baseName, originalExtName))
 		err := os.Rename(from, to)
 		if err != nil {
 			logger.Error("Cannot rename %v to %v: %v", from, to, err)

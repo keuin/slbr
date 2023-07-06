@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	errs "github.com/keuin/slbr/bilibili/errors"
-	"github.com/keuin/slbr/common"
+	"github.com/keuin/slbr/common/files"
 	"io"
 	"net/http"
 	"os"
@@ -106,6 +106,6 @@ copyLoop:
 		b.logger.Error("Stream copying was interrupted unexpectedly: %v", err)
 	}
 
-	b.logger.Info("Total downloaded: %v", common.PrettyBytes(uint64(n)))
+	b.logger.Info("Total downloaded: %v", files.PrettyBytes(uint64(n)))
 	return err
 }
