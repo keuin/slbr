@@ -8,7 +8,7 @@ Concrete task works are done in the `runner.go` file.
 import (
 	"context"
 	"fmt"
-	"github.com/keuin/slbr/common"
+	"github.com/keuin/slbr/common/retry"
 	"github.com/keuin/slbr/logging"
 	"time"
 )
@@ -90,7 +90,7 @@ func AutoRetryWithTask[T any](
 	t *RunningTask,
 	supplier func() (T, error),
 ) (T, error) {
-	return common.AutoRetry[T](
+	return retry.AutoRetry[T](
 		t.ctx,
 		supplier,
 		t.Transport.MaxRetryTimes,
@@ -105,7 +105,7 @@ func AutoRetryWithConfig[T any](
 	t *TaskConfig,
 	supplier func() (T, error),
 ) (T, error) {
-	return common.AutoRetry[T](
+	return retry.AutoRetry[T](
 		ctx,
 		supplier,
 		t.Transport.MaxRetryTimes,
