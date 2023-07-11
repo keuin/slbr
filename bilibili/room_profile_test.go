@@ -3,6 +3,7 @@ package bilibili
 import (
 	testing2 "github.com/keuin/slbr/common/testing"
 	"github.com/keuin/slbr/logging"
+	"github.com/keuin/slbr/types"
 	"log"
 	"testing"
 )
@@ -29,7 +30,7 @@ func TestBilibili_GetRoomProfile(t *testing.T) {
 		resp.Message != "ok" ||
 		resp.Data.UID <= 0 ||
 		resp.Data.RoomID != roomId ||
-		resp.Data.LiveStatus != int(Streaming) ||
+		resp.Data.LiveStatus != int(types.Streaming) ||
 		resp.Data.Title == "" {
 		t.Fatalf("Invalid GetRoomProfile response: %v", resp)
 	}

@@ -2,44 +2,19 @@ package bilibili
 
 import (
 	"context"
-	"fmt"
+	"github.com/keuin/slbr/types"
 	"net"
 )
-
-type IpNetType string
-
-var (
-	IPv6Net IpNetType = "ipv6"
-	IPv4Net IpNetType = "ipv4"
-	IP64    IpNetType = "any"
-)
-
-// GetDialNetString returns the string accepted by net.Dialer::DialContext
-func (t IpNetType) GetDialNetString() string {
-	switch t {
-	case IPv4Net:
-		return "tcp4"
-	case IPv6Net:
-		return "tcp6"
-	case IP64:
-		return "tcp"
-	}
-	return ""
-}
-
-func (t IpNetType) String() string {
-	return fmt.Sprintf("%s(%s)", string(t), t.GetDialNetString())
-}
 
 type netContext = func(context.Context, string, string) (net.Conn, error)
 
 type netProbe struct {
-	list []IpNetType
+	list []types.IpNetType
 	i    int
 }
 
-func newNetProbe(protocols []IpNetType) netProbe {
-	var netList []IpNetType
+func newNetProbe(protocols []types.IpNetType) netProbe {
+	var netList []types.IpNetType
 	netList = append(netList, protocols...)
 	return netProbe{
 		list: netList,
@@ -47,9 +22,9 @@ func newNetProbe(protocols []IpNetType) netProbe {
 	}
 }
 
-func (p *netProbe) NextNetworkType(dialer net.Dialer) (netContext, IpNetType) {
+func (p *netProbe) NextNetworkType(dialer net.Dialer) (netContext, types.IpNetType) {
 	if p.i >= len(p.list) {
-		return nil, IP64
+		return nil, types.IP64
 	}
 	network := p.list[p.i]
 	p.i++

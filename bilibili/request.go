@@ -2,6 +2,7 @@ package bilibili
 
 import (
 	"encoding/json"
+	"github.com/keuin/slbr/types"
 	"io"
 	"net"
 	"net/http"
@@ -29,7 +30,7 @@ func (b Bilibili) newGet(url string) (req *http.Request, err error) {
 }
 
 // callGet make a GET request and parse response as a JSON document with given model.
-func callGet[T BaseResponse[V], V any](b Bilibili, url string) (resp T, err error) {
+func callGet[T types.BaseResponse[V], V any](b Bilibili, url string) (resp T, err error) {
 	req, err := b.newGet(url)
 	if err != nil {
 		b.logger.Error("Cannot create HTTP request instance on API %v: %v", url, err)

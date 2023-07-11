@@ -2,21 +2,21 @@ package recording
 
 import (
 	"fmt"
-	"github.com/keuin/slbr/bilibili"
+	"github.com/keuin/slbr/types"
 )
 
 type TaskConfig struct {
-	RoomId    bilibili.RoomId `mapstructure:"room_id"`
+	RoomId    types.RoomId    `mapstructure:"room_id"`
 	Transport TransportConfig `mapstructure:"transport"`
 	Download  DownloadConfig  `mapstructure:"download"`
 	Watch     WatchConfig     `mapstructure:"watch"`
 }
 
 type TransportConfig struct {
-	SocketTimeoutSeconds int                  `mapstructure:"socket_timeout_seconds"`
-	RetryIntervalSeconds int                  `mapstructure:"retry_interval_seconds"`
-	MaxRetryTimes        int                  `mapstructure:"max_retry_times"`
-	AllowedNetworkTypes  []bilibili.IpNetType `mapstructure:"allowed_network_types"`
+	SocketTimeoutSeconds int               `mapstructure:"socket_timeout_seconds"`
+	RetryIntervalSeconds int               `mapstructure:"retry_interval_seconds"`
+	MaxRetryTimes        int               `mapstructure:"max_retry_times"`
+	AllowedNetworkTypes  []types.IpNetType `mapstructure:"allowed_network_types"`
 }
 
 type DownloadConfig struct {

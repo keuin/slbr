@@ -8,20 +8,20 @@ package dmpkg
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/keuin/slbr/bilibili"
+	"github.com/keuin/slbr/types"
 )
 
 type authInfo struct {
-	UID      uint64          `json:"uid"`
-	RoomId   bilibili.RoomId `json:"roomid"`
-	ProtoVer int             `json:"protover"`
-	Platform string          `json:"platform"`
-	Type     int             `json:"type"`
-	Key      string          `json:"key"`
+	UID      uint64       `json:"uid"`
+	RoomId   types.RoomId `json:"roomid"`
+	ProtoVer int          `json:"protover"`
+	Platform string       `json:"platform"`
+	Type     int          `json:"type"`
+	Key      string       `json:"key"`
 }
 
 // NewAuth creates a new authentication exchange.
-func NewAuth(protocol ProtocolVer, roomId bilibili.RoomId, authKey string) (exc DanmakuExchange) {
+func NewAuth(protocol ProtocolVer, roomId types.RoomId, authKey string) (exc DanmakuExchange) {
 	exc, _ = NewPlainExchange(OpConnect, authInfo{
 		UID:      UidGuest,
 		RoomId:   roomId,

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	errs "github.com/keuin/slbr/bilibili/errors"
 	"github.com/keuin/slbr/common/files"
+	"github.com/keuin/slbr/types"
 	"io"
 	"net/http"
 	"os"
@@ -17,8 +18,8 @@ const InitReadBytes = 4096 // 4KiB
 // CopyLiveStream read data from a livestream video stream, copy them to a writer.
 func (b Bilibili) CopyLiveStream(
 	ctx context.Context,
-	roomId RoomId,
-	stream StreamingUrlInfo,
+	roomId types.RoomId,
+	stream types.StreamingUrlInfo,
 	fileCreator func() (*os.File, error),
 	bufSize int64,
 ) (err error) {

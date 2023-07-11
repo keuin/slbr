@@ -15,6 +15,7 @@ import (
 	"github.com/keuin/slbr/common/files"
 	"github.com/keuin/slbr/common/myurl"
 	"github.com/keuin/slbr/logging"
+	"github.com/keuin/slbr/types"
 	"github.com/samber/mo"
 	"io"
 	"os"
@@ -250,7 +251,7 @@ func record(
 		ctx,
 		logger,
 		task,
-		func() (bilibili.RoomProfileResponse, error) {
+		func() (types.RoomProfileResponse, error) {
 			return bi.GetRoomProfile(task.RoomId)
 		},
 	)
@@ -266,7 +267,7 @@ func record(
 		ctx,
 		logger,
 		task,
-		func() (bilibili.RoomUrlInfoResponse, error) {
+		func() (types.RoomUrlInfoResponse, error) {
 			return bi.GetStreamingInfo(task.RoomId)
 		},
 	)

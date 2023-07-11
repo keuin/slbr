@@ -7,6 +7,7 @@ package bilibili
 import (
 	"context"
 	"github.com/keuin/slbr/logging"
+	"github.com/keuin/slbr/types"
 	"net"
 	"net/http"
 )
@@ -21,15 +22,15 @@ type Bilibili struct {
 	userAgent string
 	http      *http.Client
 	ctx       context.Context
-	netTypes  []IpNetType
+	netTypes  []types.IpNetType
 	logger    logging.Logger
 }
 
-func NewBilibiliWithContext(ctx context.Context, netTypes []IpNetType, logger logging.Logger) Bilibili {
-	var nets []IpNetType
+func NewBilibiliWithContext(ctx context.Context, netTypes []types.IpNetType, logger logging.Logger) Bilibili {
+	var nets []types.IpNetType
 	nets = append(nets, netTypes...)
 	if len(nets) == 0 {
-		nets = append(nets, IP64)
+		nets = append(nets, types.IP64)
 	}
 
 	var dialer net.Dialer
@@ -47,7 +48,7 @@ func NewBilibiliWithContext(ctx context.Context, netTypes []IpNetType, logger lo
 	}
 }
 
-func NewBilibiliWithNetType(netTypes []IpNetType, logger logging.Logger) Bilibili {
+func NewBilibiliWithNetType(netTypes []types.IpNetType, logger logging.Logger) Bilibili {
 	ctx := context.Background()
 	return NewBilibiliWithContext(ctx, netTypes, logger)
 }

@@ -2,9 +2,10 @@ package bilibili
 
 import (
 	"fmt"
+	"github.com/keuin/slbr/types"
 )
 
-type DanmakuServerInfoResponse = BaseResponse[danmakuInfo]
+type DanmakuServerInfoResponse = types.BaseResponse[danmakuInfo]
 
 type danmakuInfo struct {
 	Group            string  `json:"group"`
@@ -21,7 +22,7 @@ type danmakuInfo struct {
 	} `json:"host_list"`
 }
 
-func (b Bilibili) GetDanmakuServerInfo(roomId RoomId) (resp DanmakuServerInfoResponse, err error) {
+func (b Bilibili) GetDanmakuServerInfo(roomId types.RoomId) (resp DanmakuServerInfoResponse, err error) {
 	url := fmt.Sprintf("https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo?id=%d&type=0", roomId)
 	return callGet[DanmakuServerInfoResponse](b, url)
 }

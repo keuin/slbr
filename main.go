@@ -9,9 +9,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/akamensky/argparse"
-	"github.com/keuin/slbr/bilibili"
 	"github.com/keuin/slbr/logging"
 	"github.com/keuin/slbr/recording"
+	"github.com/keuin/slbr/types"
 	"github.com/mitchellh/mapstructure"
 	"github.com/samber/mo"
 	"github.com/spf13/viper"
@@ -110,11 +110,11 @@ func getTasks() (tasks []recording.TaskConfig) {
 			return
 		}
 		var gc GlobalConfig
-		netType := reflect.TypeOf(bilibili.IP64)
+		netType := reflect.TypeOf(types.IP64)
 		err = viper.Unmarshal(&gc, func(conf *mapstructure.DecoderConfig) {
 			conf.DecodeHook = func(from reflect.Value, to reflect.Value) (interface{}, error) {
 				if to.Type() == netType &&
-					bilibili.IpNetType(from.String()).GetDialNetString() == "" {
+					types.IpNetType(from.String()).GetDialNetString() == "" {
 					return nil, fmt.Errorf("invalid IpNetType: %v", from.String())
 				}
 				return from.Interface(), nil
@@ -138,7 +138,7 @@ func getTasks() (tasks []recording.TaskConfig) {
 	}
 	for i := 0; i < taskCount; i++ {
 		tasks[i] = recording.TaskConfig{
-			RoomId:    bilibili.RoomId((*rooms)[i]),
+			RoomId:    types.RoomId((*rooms)[i]),
 			Transport: recording.DefaultTransportConfig(),
 			Download: recording.DownloadConfig{
 				DiskWriteBufferBytes: int64(diskBufSize),

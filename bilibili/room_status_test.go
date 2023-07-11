@@ -3,6 +3,7 @@ package bilibili
 import (
 	testing2 "github.com/keuin/slbr/common/testing"
 	"github.com/keuin/slbr/logging"
+	"github.com/keuin/slbr/types"
 	"log"
 	"testing"
 )
@@ -29,7 +30,7 @@ func TestBilibili_GetRoomPlayInfo(t *testing.T) {
 		resp.Message != "0" ||
 		resp.Data.UID <= 0 ||
 		resp.Data.RoomID != uint64(roomId) ||
-		resp.Data.LiveStatus != Streaming {
+		resp.Data.LiveStatus != types.Streaming {
 		t.Fatalf("Invalid GetRoomPlayInfo response: %v", resp)
 	}
 }
