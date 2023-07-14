@@ -16,7 +16,7 @@ import (
 const InitReadBytes = 4096 // 4KiB
 
 // CopyLiveStream read data from a livestream video stream, copy them to a writer.
-func (b Bilibili) CopyLiveStream(
+func (b *Bilibili) CopyLiveStream(
 	ctx context.Context,
 	roomId types.RoomId,
 	stream types.StreamingUrlInfo,

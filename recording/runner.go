@@ -241,7 +241,7 @@ func tryRunTask(t *RunningTask) error {
 // nil (live is ended normally)
 func record(
 	ctx context.Context,
-	bi bilibili.Bilibili,
+	bi *bilibili.Bilibili,
 	task *TaskConfig,
 	logger logging.Logger,
 ) error {
@@ -348,7 +348,7 @@ func record(
 
 func getDanmakuServer(
 	task *TaskConfig,
-	bi bilibili.Bilibili,
+	bi *bilibili.Bilibili,
 ) (string, string, error) {
 	dmInfo, err := bi.GetDanmakuServerInfo(task.RoomId)
 	if err != nil {

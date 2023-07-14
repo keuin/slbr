@@ -26,7 +26,7 @@ type Bilibili struct {
 	logger    logging.Logger
 }
 
-func NewBilibiliWithContext(ctx context.Context, netTypes []types.IpNetType, logger logging.Logger) Bilibili {
+func NewBilibiliWithContext(ctx context.Context, netTypes []types.IpNetType, logger logging.Logger) *Bilibili {
 	var nets []types.IpNetType
 	nets = append(nets, netTypes...)
 	if len(nets) == 0 {
@@ -39,7 +39,7 @@ func NewBilibiliWithContext(ctx context.Context, netTypes []types.IpNetType, log
 	transport.DialTLSContext = nil
 	transport.DialContext, _ = np.NextNetworkType(dialer)
 
-	return Bilibili{
+	return &Bilibili{
 		logger:    logger,
 		userAgent: kUserAgent,
 		http:      http.DefaultClient,
@@ -48,11 +48,11 @@ func NewBilibiliWithContext(ctx context.Context, netTypes []types.IpNetType, log
 	}
 }
 
-func NewBilibiliWithNetType(netTypes []types.IpNetType, logger logging.Logger) Bilibili {
+func NewBilibiliWithNetType(netTypes []types.IpNetType, logger logging.Logger) *Bilibili {
 	ctx := context.Background()
 	return NewBilibiliWithContext(ctx, netTypes, logger)
 }
 
-func NewBilibili(logger logging.Logger) Bilibili {
+func NewBilibili(logger logging.Logger) *Bilibili {
 	return NewBilibiliWithNetType(nil, logger)
 }

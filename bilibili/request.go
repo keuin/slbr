@@ -10,7 +10,7 @@ import (
 )
 
 // newRequest create an HTTP request with per-instance User-Agent set.
-func (b Bilibili) newRequest(
+func (b *Bilibili) newRequest(
 	method string,
 	url string,
 	body io.Reader,
@@ -25,12 +25,12 @@ func (b Bilibili) newRequest(
 }
 
 // newRequest create an HTTP GET request with an empty body and per-instance User-Agent set.
-func (b Bilibili) newGet(url string) (req *http.Request, err error) {
+func (b *Bilibili) newGet(url string) (req *http.Request, err error) {
 	return b.newRequest("GET", url, strings.NewReader(""))
 }
 
 // callGet make a GET request and parse response as a JSON document with given model.
-func callGet[T types.BaseResponse[V], V any](b Bilibili, url string) (resp T, err error) {
+func callGet[T types.BaseResponse[V], V any](b *Bilibili, url string) (resp T, err error) {
 	req, err := b.newGet(url)
 	if err != nil {
 		b.logger.Error("Cannot create HTTP request instance on API %v: %v", url, err)
@@ -67,7 +67,7 @@ func callGet[T types.BaseResponse[V], V any](b Bilibili, url string) (resp T, er
 	return
 }
 
-func (b Bilibili) Do(req *http.Request) (resp *http.Response, err error) {
+func (b *Bilibili) Do(req *http.Request) (resp *http.Response, err error) {
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	transport.DialTLSContext = nil
 
