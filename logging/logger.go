@@ -21,21 +21,21 @@ type Logger struct {
 }
 
 const (
-	kDebug   = "DEBUG"
-	kInfo    = "INFO"
-	kWarning = "WARNING"
-	kError   = "ERROR"
-	kFatal   = "FATAL"
+	levelDebug   = "DEBUG"
+	levelInfo    = "INFO"
+	levelWarning = "WARNING"
+	levelError   = "ERROR"
+	levelFatal   = "FATAL"
 )
 
 func NewWrappedLogger(delegate *log.Logger, name string) Logger {
 	return Logger{
 		delegate:      delegate,
-		debugHeader:   fmt.Sprintf("[%v][%v]", name, kDebug),
-		infoHeader:    fmt.Sprintf("[%v][%v]", name, kInfo),
-		warningHeader: fmt.Sprintf("[%v][%v]", name, kWarning),
-		errorHeader:   fmt.Sprintf("[%v][%v]", name, kError),
-		fatalHeader:   fmt.Sprintf("[%v][%v]", name, kFatal),
+		debugHeader:   fmt.Sprintf("[%v][%v]", name, levelDebug),
+		infoHeader:    fmt.Sprintf("[%v][%v]", name, levelInfo),
+		warningHeader: fmt.Sprintf("[%v][%v]", name, levelWarning),
+		errorHeader:   fmt.Sprintf("[%v][%v]", name, levelError),
+		fatalHeader:   fmt.Sprintf("[%v][%v]", name, levelFatal),
 	}
 }
 

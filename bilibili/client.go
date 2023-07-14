@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	// kUserAgent: the default user-agent header to use when communicating with bilibili.
-	kUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
+	// userAgent: the default user-agent header to use when communicating with bilibili.
+	userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
 		"AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36"
 )
 
@@ -41,7 +41,7 @@ func NewBilibiliWithContext(ctx context.Context, netTypes []types.IpNetType, log
 
 	return &Bilibili{
 		logger:    logger,
-		userAgent: kUserAgent,
+		userAgent: userAgent,
 		http:      http.DefaultClient,
 		ctx:       ctx,
 		netTypes:  nets,

@@ -24,7 +24,7 @@ type liveInfo struct {
 }
 
 const (
-	kHeartBeatInterval = 30 * time.Second
+	heartBeatInterval = 30 * time.Second
 )
 
 // watch monitors live room status by subscribing messages from Bilibili danmaku server,
@@ -80,7 +80,7 @@ func watch(
 	}
 
 	// create heartbeat timer
-	heartBeatTimer := time.NewTicker(kHeartBeatInterval)
+	heartBeatTimer := time.NewTicker(heartBeatInterval)
 	defer func() { heartBeatTimer.Stop() }()
 
 	logger.Info("Checking initial live status...")
