@@ -22,6 +22,17 @@ const (
 	StStopped
 )
 
+var taskStatusStrings = map[TaskStatus]string{
+	StNotStarted: "ready",
+	StRunning:    "running",
+	StRestarting: "restarting",
+	StStopped:    "stopped",
+}
+
+func (s TaskStatus) String() string {
+	return taskStatusStrings[s]
+}
+
 var (
 	ErrTaskIsAlreadyStarted = fmt.Errorf("task is already started")
 	ErrTaskIsStopped        = fmt.Errorf("restarting a stopped task is not allowed")
