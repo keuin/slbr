@@ -7,6 +7,7 @@ Task lifecycle management are implemented in recording package.
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/akamensky/argparse"
 	"github.com/keuin/slbr/api"
@@ -75,6 +76,14 @@ func getTasks() (tasks []recording.TaskConfig) {
 			Default: 4194304,
 		},
 	)
+	apiServer := parser.String(
+		"l", "listen",
+		&argparse.Options{
+			Required: false,
+			Help:     "Run HTTP API server on specific address and port",
+			Default:  nil,
+		},
+	)
 
 	err = parser.Parse(os.Args)
 	if err != nil {
@@ -126,9 +135,19 @@ func getTasks() (tasks []recording.TaskConfig) {
 			return
 		}
 		globalConfig = &gc
+		if gc.ApiServer != "" && *apiServer != "" && *apiServer != gc.ApiServer {
+			panic(errors.New("API server endpoint is defined twice"))
+		}
+		if gc.ApiServer == "" {
+			gc.ApiServer = *apiServer
+		}
 		return globalConfig.Tasks
 	}
 
+	globalConfig = &GlobalConfig{}
+	if *apiServer != "" {
+		globalConfig.ApiServer = *apiServer
+	}
 	// generate task list from cli
 	taskCount := len(*rooms)
 	tasks = make([]recording.TaskConfig, taskCount)
@@ -171,20 +190,18 @@ func main() {
 	}
 	fmt.Println("")
 
-	apiAddr := os.Getenv("BIND_ADDR")
-	if apiAddr == "" {
-		apiAddr = ":8080"
-	}
-	apiAgent := &agentImpl{
-		tasks: &tasks,
-	}
-	go func() {
-		logger.Println("Starting API server...")
-		err := api.StartServer(apiAddr, apiAgent)
-		if err != nil {
-			logger.Fatalf("Failed to start API server: %v", err)
+	if globalConfig.ApiServer != "" {
+		apiAgent := &agentImpl{
+			tasks: &tasks,
 		}
-	}()
+		go func() {
+			logger.Println("Starting API server...")
+			err := api.StartServer(globalConfig.ApiServer, apiAgent)
+			if err != nil {
+				logger.Fatalf("Failed to start API server: %v", err)
+			}
+		}()
+	}
 
 	logger.Printf("Starting tasks...")
 
