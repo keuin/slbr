@@ -26,8 +26,8 @@ func (dm DanMuMessage) String() string {
 const InvalidDanmakuJson = "invalid danmaku JSON document"
 
 func ParseDanmakuMessage(body RawDanMuMessage) (dmm DanMuMessage, err error) {
-	if len(body.Info) != 16 {
-		err = fmt.Errorf("%s: \"info\" length != 16", InvalidDanmakuJson)
+	if len(body.Info) < 16 {
+		err = fmt.Errorf("%s: \"info\" length < 16", InvalidDanmakuJson)
 		return
 	}
 
