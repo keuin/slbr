@@ -2,6 +2,7 @@ package recording
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	errs "github.com/keuin/slbr/bilibili/errors"
 	"github.com/keuin/slbr/danmaku"
@@ -174,7 +175,8 @@ func watch(
 						}
 						dmm, err := dmmsg.ParseDanmakuMessage(raw)
 						if err != nil {
-							logger.Error("Cannot parse danmaku message JSON: %v", err)
+							logger.Error("Cannot parse danmaku message JSON: %v, raw data (base64 encoded): %v",
+								err, base64.StdEncoding.EncodeToString(msg.Body))
 							continue
 						}
 						logger.Info("Danmaku: %v", dmm.String())
