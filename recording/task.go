@@ -18,14 +18,16 @@ type TaskStatus int
 
 const (
 	StNotStarted TaskStatus = iota
-	StRunning
+	StWaiting
+	StRecording
 	StRestarting
 	StStopped
 )
 
 var taskStatusStrings = map[TaskStatus]string{
 	StNotStarted: "ready",
-	StRunning:    "running",
+	StWaiting:    "waiting",
+	StRecording:  "recording",
 	StRestarting: "restarting",
 	StStopped:    "stopped",
 }
@@ -94,7 +96,7 @@ func (t *RunningTask) StartTask() error {
 			t.runTaskWithAutoRestart()
 		}()
 		return nil
-	case StRunning:
+	case StWaiting, StRecording:
 		return ErrTaskIsAlreadyStarted
 	case StRestarting:
 		return ErrTaskIsAlreadyStarted
