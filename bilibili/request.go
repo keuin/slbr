@@ -60,7 +60,7 @@ func callGetRaw(b *Bilibili, url string) (resp *http.Response, respBody []byte, 
 }
 
 // callGet make a GET request and parse response as a JSON document with given model.
-func callGet[T BaseResponse[V], V any](b Bilibili, url string) (resp T, err error) {
+func callGet[T types.BaseResponse[V], V any](b *Bilibili, url string) (resp T, err error) {
 	r, data, err := callGetRaw(b, url)
 	if err != nil {
 		return

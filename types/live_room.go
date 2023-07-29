@@ -2,6 +2,8 @@ package types
 
 type RoomUrlInfoResponse = BaseResponse[roomUrlInfo]
 
+type WebBannerResponse = BaseResponse[interface{}]
+
 type roomUrlInfo struct {
 	CurrentQuality       int                  `json:"current_quality"`
 	AcceptQuality        []string             `json:"accept_quality"`

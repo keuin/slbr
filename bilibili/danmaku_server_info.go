@@ -7,8 +7,6 @@ import (
 	"net/url"
 )
 
-type WebBannerResponse = BaseResponse[interface{}]
-
 const apiUrlPrefix = "https://api.live.bilibili.com"
 
 func (b *Bilibili) GetDanmakuServerInfo(roomId types.RoomId) (resp types.DanmakuServerInfoResponse, err error) {
@@ -38,10 +36,10 @@ func (b *Bilibili) GetBUVID() (string, error) {
 }
 
 // GetLiveBUVID initializes cookie `LIVE_BUVID`. This should be called before GetDanmakuServerInfo.
-func (b *Bilibili) GetLiveBUVID(roomId types.RoomId) (resp WebBannerResponse, err error) {
+func (b *Bilibili) GetLiveBUVID(roomId types.RoomId) (resp types.WebBannerResponse, err error) {
 	u := fmt.Sprintf("https://api.live.bilibili.com/activity/v1/Common/webBanner?"+
 		"platform=web&position=6&roomid=%d&area_v2_parent_id=0&area_v2_id=0&from=", roomId)
-	resp, err = callGet[WebBannerResponse](b, u)
+	resp, err = callGet[types.WebBannerResponse](b, u)
 	if err == nil {
 		uu, _ := url.Parse(apiUrlPrefix)
 		b.logger.Info("Cookie info: %v", b.http.Jar.Cookies(uu))

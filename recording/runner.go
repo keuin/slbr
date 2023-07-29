@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"github.com/keuin/slbr/bilibili"
 	errs "github.com/keuin/slbr/bilibili/errors"
+	"github.com/keuin/slbr/common"
 	"github.com/keuin/slbr/common/files"
 	"github.com/keuin/slbr/common/myurl"
 	"github.com/keuin/slbr/logging"
@@ -128,7 +129,7 @@ func tryRunTask(t *RunningTask) error {
 				dmInfo.BUVID3,
 				liveStatusChecker,
 				t.logger,
-				&bi,
+				bi,
 			)
 			// the context is cancelled
 			if errors.Is(err, context.Canceled) {
