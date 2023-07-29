@@ -333,6 +333,17 @@ func record(
 	writeBufferSize := task.Download.DiskWriteBufferBytes
 	logger.Info("Write buffer size: %v byte", writeBufferSize)
 	err = bi.CopyLiveStream(ctx, task.RoomId, streamSource, func() (f *os.File, e error) {
+		dirInfo, err := os.Stat(saveDir)
+		if err != nil && !errors.Is(err, os.ErrNotExist) {
+			return nil, err
+		}
+		err = nil
+		if dirInfo == nil || !dirInfo.IsDir() {
+			err = os.Mkdir(saveDir, 0775)
+			if err != nil {
+				return nil, fmt.Errorf("cannot create save directory: %w", err)
+			}
+		}
 		f, e = os.OpenFile(filePath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 		if e != nil {
 			file = f
