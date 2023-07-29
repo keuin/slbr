@@ -23,6 +23,16 @@ type DanmakuClient struct {
 	wsio wsDatagramIO
 }
 
+func NewClient(ctx context.Context, ws *websocket.Conn) DanmakuClient {
+	return DanmakuClient{
+		ws: ws,
+		wsio: wsDatagramIO{
+			ws:  ws,
+			ctx: ctx,
+		},
+	}
+}
+
 type DanmakuMessageType int
 
 // wsDatagramIO wraps websocket into a datagram I/O,
@@ -48,34 +58,6 @@ func (w *wsDatagramIO) Get() (data []byte, err error) {
 	return
 }
 
-func NewDanmakuClient() DanmakuClient {
-	return DanmakuClient{
-		ws: nil,
-	}
-}
-
-func (d *DanmakuClient) Connect(ctx context.Context, url string) error {
-	// thread unsafe
-
-	// dial
-	if d.ws != nil {
-		return fmt.Errorf("already connected")
-	}
-	ws, _, err := websocket.Dial(ctx, url, nil)
-	if err != nil {
-		return fmt.Errorf("failed to establish WebSocket connection: %w", err)
-	}
-	d.ws = ws
-
-	// init wsio
-	d.wsio = wsDatagramIO{
-		ws:  ws,
-		ctx: ctx,
-	}
-
-	return nil
-}
-
 func (d *DanmakuClient) Disconnect() error {
 	// thread unsafe
 	ws := d.ws
@@ -87,8 +69,8 @@ func (d *DanmakuClient) Disconnect() error {
 	return ws.Close(websocket.StatusInternalError, "disconnected")
 }
 
-func (d *DanmakuClient) Authenticate(roomId types.RoomId, authKey string) error {
-	pkg := dmpkg.NewAuth(dmpkg.ProtoBrotli, roomId, authKey)
+func (d *DanmakuClient) Authenticate(roomId types.RoomId, authKey, buvid3 string) error {
+	pkg := dmpkg.NewAuth(dmpkg.ProtoBrotli, roomId, authKey, buvid3)
 	data, err := pkg.Marshal()
 	if err != nil {
 		return fmt.Errorf("exchange marshal failed: %w", err)

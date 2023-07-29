@@ -10,6 +10,7 @@ import (
 	"github.com/keuin/slbr/types"
 	"net"
 	"net/http"
+	"net/http/cookiejar"
 )
 
 const (
@@ -39,10 +40,15 @@ func NewBilibiliWithContext(ctx context.Context, netTypes []types.IpNetType, log
 	transport.DialTLSContext = nil
 	transport.DialContext, _ = np.NextNetworkType(dialer)
 
+	cookieJar, _ := cookiejar.New(nil)
+	httpClient := &http.Client{
+		Jar: cookieJar,
+	}
+
 	return &Bilibili{
 		logger:    logger,
 		userAgent: userAgent,
-		http:      http.DefaultClient,
+		http:      httpClient,
 		ctx:       ctx,
 		netTypes:  nets,
 	}

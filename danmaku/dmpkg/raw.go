@@ -37,7 +37,7 @@ func NewPlainExchange(operation Operation, body interface{}) (exc DanmakuExchang
 		DanmakuExchangeHeader: DanmakuExchangeHeader{
 			Length:       uint32(length),
 			HeaderLength: HeaderLength,
-			ProtocolVer:  ProtoPlainJson,
+			ProtocolVer:  ProtoMinimal,
 			Operation:    operation,
 			SequenceId:   SequenceId,
 		},

@@ -4,7 +4,8 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	errs "github.com/keuin/slbr/bilibili/errors"
+	errs "github.com/keuin/slbr/bilibili"
+	"github.com/keuin/slbr/bilibili/errors"
 	"github.com/keuin/slbr/danmaku"
 	"github.com/keuin/slbr/danmaku/dmmsg"
 	"github.com/keuin/slbr/danmaku/dmpkg"
@@ -41,19 +42,19 @@ func watch(
 	ctx context.Context,
 	t TaskConfig,
 	url string,
-	authKey string,
+	authKey, buvid3 string,
 	liveStatusChecker func() (bool, error),
 	logger logging.Logger,
+	bi *bilibili.Bilibili,
 ) error {
 	var err error
 
-	dm := danmaku.NewDanmakuClient()
-
-	// connect to danmaku server for live online/offline notifications
-	err = dm.Connect(ctx, url)
+	ws, err := bi.DialWebSocket(ctx, url)
 	if err != nil {
 		return errs.NewError(errs.DanmakuServerConnection, err)
 	}
+
+	dm := danmaku.NewClient(ctx, ws)
 	defer func() {
 		// this operation may be time-consuming, so run in another goroutine
 		go func() {
@@ -63,7 +64,7 @@ func watch(
 
 	// the danmaku server requires an auth token and room id when connected
 	logger.Info("ws connected. Authenticating...")
-	err = dm.Authenticate(t.RoomId, authKey)
+	err = dm.Authenticate(t.RoomId, authKey, buvid3)
 	if err != nil {
 		return errs.NewError(errs.InvalidAuthProtocol, err)
 	}

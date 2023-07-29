@@ -76,15 +76,9 @@ func tryRunTask(t *RunningTask) error {
 
 	t.logger.Info("Getting notification server info...")
 
-	type dmServerInfo struct {
-		AuthKey string
-		DmUrl   string
-	}
-
 	dmInfo, err := AutoRetryWithTask(
-		t, func() (info dmServerInfo, err error) {
-			info.AuthKey, info.DmUrl, err = getDanmakuServer(&t.TaskConfig, bi)
-			return
+		t, func() (*danmakuServerInfo, error) {
+			return getDanmakuServer(&t.TaskConfig, bi)
 		},
 	)
 	if err != nil {
@@ -124,13 +118,17 @@ func tryRunTask(t *RunningTask) error {
 		}
 	loop:
 		for run {
+			t.logger.Info("Start watching, ws url: %v, auth key: %v, buvid3: %v",
+				dmInfo.DanmakuWebsocketUrl, dmInfo.AuthKey, dmInfo.BUVID3)
 			err = watch(
 				ctxWatcher,
 				t.TaskConfig,
-				dmInfo.DmUrl,
+				dmInfo.DanmakuWebsocketUrl,
 				dmInfo.AuthKey,
+				dmInfo.BUVID3,
 				liveStatusChecker,
 				t.logger,
+				&bi,
 			)
 			// the context is cancelled
 			if errors.Is(err, context.Canceled) {
@@ -361,23 +359,45 @@ func record(
 	return errs.NewError(errs.StreamCopy, err)
 }
 
+type danmakuServerInfo struct {
+	DanmakuWebsocketUrl string
+	AuthKey             string
+	BUVID3              string
+}
+
 func getDanmakuServer(
 	task *TaskConfig,
 	bi *bilibili.Bilibili,
-) (string, string, error) {
+) (*danmakuServerInfo, error) {
+	buvid3, err := bi.GetBUVID()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get buvid: %w", err)
+	}
+
+	resp, err := bi.GetLiveBUVID(task.RoomId)
+	if err != nil || resp.Code != 0 {
+		if err != nil {
+			return nil, fmt.Errorf("failed to get LIVE_BUVID with api `webBanner`: %w", err)
+		}
+		return nil, fmt.Errorf("failed to get LIVE_BUVID with api `webBanner`: invalid response: %v", resp)
+	}
 	dmInfo, err := bi.GetDanmakuServerInfo(task.RoomId)
 	if err != nil {
-		return "", "", fmt.Errorf("failed to read stream server info: %w", err)
+		return nil, fmt.Errorf("failed to read stream server info: %w", err)
 	}
 	if len(dmInfo.Data.HostList) == 0 {
-		return "", "", fmt.Errorf("no available stream server")
+		return nil, fmt.Errorf("no available stream server")
 	}
 
 	// get authkey and ws url
 	authKey := dmInfo.Data.Token
 	host := dmInfo.Data.HostList[0]
 	url := fmt.Sprintf("wss://%s:%d/sub", host.Host, host.WssPort)
-	return authKey, url, nil
+	return &danmakuServerInfo{
+		DanmakuWebsocketUrl: url,
+		AuthKey:             authKey,
+		BUVID3:              buvid3,
+	}, nil
 }
 
 func GenerateFileName(roomName string, t time.Time) string {

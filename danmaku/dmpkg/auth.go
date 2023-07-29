@@ -15,17 +15,19 @@ type authInfo struct {
 	UID      uint64       `json:"uid"`
 	RoomId   types.RoomId `json:"roomid"`
 	ProtoVer int          `json:"protover"`
+	BUVID3   string       `json:"buvid"`
 	Platform string       `json:"platform"`
 	Type     int          `json:"type"`
 	Key      string       `json:"key"`
 }
 
 // NewAuth creates a new authentication exchange.
-func NewAuth(protocol ProtocolVer, roomId types.RoomId, authKey string) (exc DanmakuExchange) {
+func NewAuth(protocol ProtocolVer, roomId types.RoomId, authKey, buvid3 string) (exc DanmakuExchange) {
 	exc, _ = NewPlainExchange(OpConnect, authInfo{
 		UID:      UidGuest,
 		RoomId:   roomId,
 		ProtoVer: int(protocol),
+		BUVID3:   buvid3,
 		Platform: PlatformWeb,
 		Type:     AuthTypeDefault,
 		Key:      authKey,

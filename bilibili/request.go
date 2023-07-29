@@ -29,8 +29,8 @@ func (b *Bilibili) newGet(url string) (req *http.Request, err error) {
 	return b.newRequest("GET", url, strings.NewReader(""))
 }
 
-// callGet make a GET request and parse response as a JSON document with given model.
-func callGet[T types.BaseResponse[V], V any](b *Bilibili, url string) (resp T, err error) {
+// callGetRaw make a GET request and returns the raw response body.
+func callGetRaw(b *Bilibili, url string) (resp *http.Response, respBody []byte, err error) {
 	req, err := b.newGet(url)
 	if err != nil {
 		b.logger.Error("Cannot create HTTP request instance on API %v: %v", url, err)
@@ -53,6 +53,16 @@ func callGet[T types.BaseResponse[V], V any](b *Bilibili, url string) (resp T, e
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		b.logger.Error("Error when reading HTTP response on API %v: %v", url, err)
+		return
+	}
+
+	return r, data, err
+}
+
+// callGet make a GET request and parse response as a JSON document with given model.
+func callGet[T BaseResponse[V], V any](b Bilibili, url string) (resp T, err error) {
+	r, data, err := callGetRaw(b, url)
+	if err != nil {
 		return
 	}
 
