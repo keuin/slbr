@@ -42,7 +42,7 @@ var errLiveEnded = errs.NewError(errs.LiveEnded)
 // During the process, its status may change.
 // Note: this method is blocking.
 func (t *RunningTask) runTaskWithAutoRestart() {
-	t.status = StWaiting
+	t.setStatus(StWaiting)
 loop:
 	for {
 		err := tryRunTask(t)
@@ -56,7 +56,7 @@ loop:
 			if !errors.Is(err, errLiveEnded) {
 				t.logger.Error("Temporary error: %v", err)
 			}
-			t.status = StRestarting
+			t.setStatus(StRestarting)
 		default:
 			t.logger.Error("Cannot recover from error: %v", err)
 			break loop
@@ -171,7 +171,7 @@ func tryRunTask(t *RunningTask) error {
 	case nil:
 		// live is started, start recording
 		// (now the watcher should have stopped)
-		t.status = StRecording
+		t.setStatus(StRecording)
 		return func() error {
 			var err error
 			run := true

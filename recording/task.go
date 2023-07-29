@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-type TaskStatus int
+type TaskStatus uint32
 
 const (
 	StNotStarted TaskStatus = iota
@@ -48,7 +48,7 @@ type RunningTask struct {
 	// ctx: the biggest context this task uses. It may create children contexts.
 	ctx context.Context
 	// status: running status
-	status TaskStatus
+	status atomic.Uint32
 	// hookStarted: called asynchronously when the task is started. This won't be called when restarting.
 	hookStarted func()
 	// hookStopped: called asynchronously when the task is stopped. This won't be called when restarting.
@@ -58,8 +58,12 @@ type RunningTask struct {
 	roomTitle atomic.Pointer[string]
 }
 
+func (t *RunningTask) setStatus(status TaskStatus) {
+	t.status.Store(uint32(status))
+}
+
 func (t *RunningTask) GetStatus() TaskStatus {
-	return t.status
+	return TaskStatus(t.status.Load())
 }
 
 func (t *RunningTask) GetRoomTitle() *string {
@@ -73,23 +77,24 @@ func NewRunningTask(
 	hookStopped func(),
 	logger logging.Logger,
 ) *RunningTask {
-	return &RunningTask{
+	t := &RunningTask{
 		TaskConfig:  config,
 		ctx:         ctx,
-		status:      StNotStarted,
 		hookStarted: hookStarted,
 		hookStopped: hookStopped,
 		logger:      logger,
 	}
+	t.setStatus(StNotStarted)
+	return t
 }
 
 func (t *RunningTask) StartTask() error {
-	st := t.status
+	st := t.GetStatus()
 	switch st {
 	case StNotStarted:
 		// TODO real start
 		go func() {
-			defer func() { t.status = StStopped }()
+			defer func() { t.setStatus(StStopped) }()
 			t.hookStarted()
 			defer t.hookStopped()
 			// do the task
