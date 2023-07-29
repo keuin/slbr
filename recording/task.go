@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/keuin/slbr/common/retry"
 	"github.com/keuin/slbr/logging"
+	"sync/atomic"
 	"time"
 )
 
@@ -51,7 +52,16 @@ type RunningTask struct {
 	// hookStopped: called asynchronously when the task is stopped. This won't be called when restarting.
 	hookStopped func()
 	// logger: where to print logs
-	logger logging.Logger
+	logger    logging.Logger
+	roomTitle atomic.Pointer[string]
+}
+
+func (t *RunningTask) GetStatus() TaskStatus {
+	return t.status
+}
+
+func (t *RunningTask) GetRoomTitle() *string {
+	return t.roomTitle.Load()
 }
 
 func NewRunningTask(
@@ -60,8 +70,8 @@ func NewRunningTask(
 	hookStarted func(),
 	hookStopped func(),
 	logger logging.Logger,
-) RunningTask {
-	return RunningTask{
+) *RunningTask {
+	return &RunningTask{
 		TaskConfig:  config,
 		ctx:         ctx,
 		status:      StNotStarted,

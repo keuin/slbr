@@ -175,7 +175,9 @@ func tryRunTask(t *RunningTask) error {
 			var err error
 			run := true
 			for run {
-				err = record(t.ctx, bi, &t.TaskConfig, t.logger)
+				err = record(t.ctx, bi, &t.TaskConfig, t.logger, func(resp types.RoomProfileResponse) {
+					t.roomTitle.Store(&resp.Data.Title)
+				})
 				if err == nil {
 					// live is ended
 					t.logger.Info("The live is ended. Restarting current task...")
@@ -247,6 +249,7 @@ func record(
 	bi *bilibili.Bilibili,
 	task *TaskConfig,
 	logger logging.Logger,
+	profileConsumer func(types.RoomProfileResponse),
 ) error {
 	logger.Info("Getting room profile...")
 
@@ -264,6 +267,8 @@ func record(
 		}
 		return errs.NewError(errs.GetRoomInfo, err)
 	}
+
+	profileConsumer(profile)
 
 	logger.Info("Getting stream url...")
 	urlInfo, err := AutoRetryWithConfig(

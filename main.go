@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/akamensky/argparse"
+	"github.com/keuin/slbr/api"
 	"github.com/keuin/slbr/logging"
 	"github.com/keuin/slbr/recording"
 	"github.com/keuin/slbr/types"
@@ -153,7 +154,7 @@ func getTasks() (tasks []recording.TaskConfig) {
 func main() {
 	logger := log.Default()
 	taskConfigs := getTasks()
-	tasks := make([]recording.RunningTask, len(taskConfigs))
+	tasks := make([]*recording.RunningTask, len(taskConfigs))
 
 	wg := sync.WaitGroup{}
 	ctxTasks, cancelTasks := context.WithCancel(context.Background())
@@ -169,6 +170,21 @@ func main() {
 		fmt.Printf("[%2d] %s\n", i+1, task)
 	}
 	fmt.Println("")
+
+	apiAddr := os.Getenv("BIND_ADDR")
+	if apiAddr == "" {
+		apiAddr = ":8080"
+	}
+	apiAgent := &agentImpl{
+		tasks: &tasks,
+	}
+	go func() {
+		logger.Println("Starting API server...")
+		err := api.StartServer(apiAddr, apiAgent)
+		if err != nil {
+			logger.Fatalf("Failed to start API server: %v", err)
+		}
+	}()
 
 	logger.Printf("Starting tasks...")
 
