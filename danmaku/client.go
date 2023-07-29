@@ -88,7 +88,7 @@ func (d *DanmakuClient) Disconnect() error {
 }
 
 func (d *DanmakuClient) Authenticate(roomId types.RoomId, authKey string) error {
-	pkg := dmpkg.NewAuth(dmpkg.ProtoPlainJson, roomId, authKey)
+	pkg := dmpkg.NewAuth(dmpkg.ProtoBrotli, roomId, authKey)
 	data, err := pkg.Marshal()
 	if err != nil {
 		return fmt.Errorf("exchange marshal failed: %w", err)
