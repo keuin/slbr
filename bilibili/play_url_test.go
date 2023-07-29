@@ -21,6 +21,10 @@ func TestBilibili_GetStreamingInfo(t *testing.T) {
 
 	logger := log.Default()
 	bi := NewBilibili(logging.NewWrappedLogger(logger, "test-logger"))
+	_, err = bi.GetBUVID()
+	if err != nil {
+		t.Fatalf("GetBUVID: %v", err)
+	}
 	info, err := bi.GetStreamingInfo(roomId)
 	if err != nil {
 		t.Fatalf("GetStreamingInfo: %v", err)
