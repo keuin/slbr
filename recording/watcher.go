@@ -70,7 +70,13 @@ func watch(
 
 	// the danmaku server requires heartbeat messages every 30 seconds
 	heartbeat := func() error {
+		logger.Debug("Sending heartbeat...")
 		err := dm.Heartbeat()
+		if err == nil {
+			logger.Info("Heartbeat sent OK.")
+		} else {
+			logger.Error("Failed to send heartbeat: %v", err)
+		}
 		return err
 	}
 
@@ -96,15 +102,27 @@ func watch(
 		logger.Info("The live is not started yet. Waiting...")
 	}
 
+	hbCtx, hbCancel := context.WithCancel(ctx)
+	defer hbCancel()
+	go func() {
+		for {
+			select {
+			case <-heartBeatTimer.C:
+				err = heartbeat()
+				if err != nil {
+					logger.Error("heartbeat failed: %v", err)
+				}
+			case <-hbCtx.Done():
+				logger.Debug("Heartbeat loop is stopped.")
+				return
+			}
+		}
+	}()
+
 	for {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		case <-heartBeatTimer.C:
-			err = heartbeat()
-			if err != nil {
-				return errs.NewError(errs.Heartbeat, err)
-			}
 		default:
 			var msg dmpkg.DanmakuExchange
 			msg, err = dm.ReadExchange()
