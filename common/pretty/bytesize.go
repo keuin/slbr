@@ -1,8 +1,8 @@
-package files
+package pretty
 
 import "fmt"
 
-func PrettyBytes(b uint64) string {
+func Bytes(b uint64) string {
 	if b < 1000 {
 		return fmt.Sprintf("%d Byte", b)
 	}

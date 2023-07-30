@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	errs "github.com/keuin/slbr/bilibili/errors"
-	"github.com/keuin/slbr/common/files"
+	"github.com/keuin/slbr/common/pretty"
 	"github.com/keuin/slbr/types"
 	"io"
 	"net/http"
@@ -96,12 +96,8 @@ func (b *Bilibili) CopyLiveStream(
 		for {
 			select {
 			case <-printTicker.C:
-				d := int64(time.Now().Sub(startTime).Seconds())
-				h := d / 3600
-				m := (d % 3600) / 60
-				s := d % 60
-				b.logger.Info("Downloaded: %v, duration: %02d:%02d:%02d",
-					files.PrettyBytes(uint64(n.Load())), h, m, s)
+				b.logger.Info("Downloaded: %v, duration: %v",
+					pretty.Bytes(uint64(n.Load())), pretty.Duration(time.Now().Sub(startTime)))
 			case <-stopPrintLoop:
 				return
 			}
@@ -133,6 +129,6 @@ copyLoop:
 		b.logger.Error("Stream copying was interrupted unexpectedly: %v", err)
 	}
 
-	b.logger.Info("Total downloaded: %v", files.PrettyBytes(uint64(n.Load())))
+	b.logger.Info("Total downloaded: %v", pretty.Bytes(uint64(n.Load())))
 	return err
 }
