@@ -11,9 +11,12 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync/atomic"
+	"time"
 )
 
 const InitReadBytes = 4096 // 4KiB
+const progressReportInterval = 30 * time.Second
 
 // CopyLiveStream read data from a livestream video stream, copy them to a writer.
 func (b *Bilibili) CopyLiveStream(
@@ -61,6 +64,7 @@ func (b *Bilibili) CopyLiveStream(
 	// so we don't create blank files if the live room is open
 	// but the live hasn't started yet
 	initBytes := make([]byte, InitReadBytes)
+	startTime := time.Now()
 	_, err = io.ReadFull(resp.Body, initBytes)
 	if err != nil {
 		b.logger.Error("Failed to read stream initial bytes: %v", err)
@@ -82,7 +86,27 @@ func (b *Bilibili) CopyLiveStream(
 	}
 	initBytes = nil // discard that buffer
 
-	var n int64
+	var n atomic.Int64
+
+	// print download progress at a steady interval
+	printTicker := time.NewTicker(progressReportInterval)
+	stopPrintLoop := make(chan struct{})
+	go func() {
+		defer printTicker.Stop()
+		for {
+			select {
+			case <-printTicker.C:
+				d := int64(time.Now().Sub(startTime).Seconds())
+				h := d / 3600
+				m := (d % 3600) / 60
+				s := d % 60
+				b.logger.Info("Downloaded: %v, duration: %02d:%02d:%02d",
+					files.PrettyBytes(uint64(n.Load())), h, m, s)
+			case <-stopPrintLoop:
+				return
+			}
+		}
+	}()
 
 	// blocking copy
 copyLoop:
@@ -95,9 +119,11 @@ copyLoop:
 		default:
 			var sz int64
 			sz, err = io.CopyN(out, resp.Body, bufSize)
-			n += sz
+			n.Add(sz)
 		}
 	}
+
+	close(stopPrintLoop)
 
 	if errors.Is(err, context.Canceled) {
 		b.logger.Info("Stop copying...")
@@ -107,6 +133,6 @@ copyLoop:
 		b.logger.Error("Stream copying was interrupted unexpectedly: %v", err)
 	}
 
-	b.logger.Info("Total downloaded: %v", files.PrettyBytes(uint64(n)))
+	b.logger.Info("Total downloaded: %v", files.PrettyBytes(uint64(n.Load())))
 	return err
 }
