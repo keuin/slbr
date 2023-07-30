@@ -31,6 +31,11 @@ func (e *DanmakuExchange) String() string {
 		e.Length, e.ProtocolVer, e.Operation, e.Body)
 }
 
+func (e *DanmakuExchange) PrettyString() string {
+	return fmt.Sprintf("DanmakuExchange{length=%v, protocol=%v, operation=%v, body=%v}",
+		e.Length, e.ProtocolVer, e.Operation.String(), string(e.Body))
+}
+
 const (
 	HeaderLength = 16
 	SequenceId   = 1
